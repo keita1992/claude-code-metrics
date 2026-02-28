@@ -1,4 +1,4 @@
-"""Claude Code Dashboard バックエンド"""
+"""Claude Code Metrics バックエンド"""
 
 import os
 from contextlib import asynccontextmanager
@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Claude Code Dashboard API",
+    title="Claude Code Metrics API",
     lifespan=lifespan,
 )
 

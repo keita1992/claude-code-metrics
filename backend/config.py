@@ -5,7 +5,6 @@ CLAUDE_DATA_DIR = Path(os.environ.get("CLAUDE_DATA_DIR", str(Path.home() / ".cla
 
 STATS_CACHE_PATH = CLAUDE_DATA_DIR / "stats-cache.json"
 PROJECTS_DIR = CLAUDE_DATA_DIR / "projects"
-HISTORY_PATH = CLAUDE_DATA_DIR / "history.jsonl"
 
 # API価格テーブル (USD per million tokens)
 # 出典: https://platform.claude.com/docs/en/about-claude/pricing

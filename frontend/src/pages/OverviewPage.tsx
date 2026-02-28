@@ -65,7 +65,7 @@ export default function OverviewPage() {
       {/* ヘッダー */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-ink text-balance">Overview</h2>
+          <h2 className="text-2xl font-bold text-ink text-balance">概要</h2>
           <p className="text-xs text-ink-muted mt-0.5">今月の集計</p>
         </div>
         <button
@@ -229,7 +229,7 @@ export default function OverviewPage() {
               </p>
             </div>
             <div>
-              <p className="text-ink-muted text-xs font-medium">最コストモデル</p>
+              <p className="text-ink-muted text-xs font-medium">最高コストモデル</p>
               {data.topModel ? (
                 <>
                   <p className="text-2xl font-bold text-ink mt-1">{data.topModel.name}</p>
@@ -280,7 +280,7 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   return (
     <div className="flex items-center justify-center h-64">
       <div className="bg-panel rounded-xl p-8 border border-highlight text-center max-w-md">
-        <p className="text-highlight font-medium mb-2">Failed to load data</p>
+        <p className="text-highlight font-medium mb-2">データの読み込みに失敗しました</p>
         <p className="text-ink-secondary text-sm mb-4">{message}</p>
         <button
           onClick={onRetry}

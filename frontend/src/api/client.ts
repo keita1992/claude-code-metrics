@@ -42,6 +42,11 @@ export interface DailyData {
     messageCount: number;
   }>;
   timezone: string;
+  summary?: {
+    uniqueSessions: number;
+    totalMessages: number;
+    totalCost: number;
+  };
 }
 
 export interface ModelsData {

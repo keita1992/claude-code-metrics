@@ -76,7 +76,7 @@ export default function ModelAnalysisPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-ink text-balance">Model Analysis</h2>
+          <h2 className="text-2xl font-bold text-ink text-balance">モデル分析</h2>
           <p className="text-xs text-ink-muted mt-0.5">集計TZ: {data.coverage.timezone}</p>
         </div>
         <button
@@ -112,7 +112,7 @@ export default function ModelAnalysisPage() {
         {/* Token Usage by Model */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            Token Usage by Model
+            モデル別トークン使用量
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={tokenData} layout="vertical">
@@ -137,10 +137,10 @@ export default function ModelAnalysisPage() {
                   <span style={{ color: chart.legendText, fontSize: "12px" }}>{value}</span>
                 )}
               />
-              <Bar dataKey="input" name="Input" stackId="a" fill={chart.series[0]} />
-              <Bar dataKey="output" name="Output" stackId="a" fill={chart.series[1]} />
-              <Bar dataKey="cacheRead" name="Cache Read" stackId="a" fill={chart.series[2]} />
-              <Bar dataKey="cacheCreation" name="Cache Create" stackId="a" fill={chart.series[3]} />
+              <Bar dataKey="input" name="入力" stackId="a" fill={chart.series[0]} />
+              <Bar dataKey="output" name="出力" stackId="a" fill={chart.series[1]} />
+              <Bar dataKey="cacheRead" name="キャッシュ読込" stackId="a" fill={chart.series[2]} />
+              <Bar dataKey="cacheCreation" name="キャッシュ生成" stackId="a" fill={chart.series[3]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -148,7 +148,7 @@ export default function ModelAnalysisPage() {
         {/* Cache Hit Rate */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            Cache Hit Rate by Model
+            モデル別キャッシュヒット率
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={cacheRateData} layout="vertical">
@@ -169,7 +169,7 @@ export default function ModelAnalysisPage() {
                 contentStyle={chart.tooltipStyle}
                 formatter={(value: number) => `${value.toFixed(1)}%`}
               />
-              <Bar dataKey="rate" name="Hit Rate" radius={[0, 4, 4, 0]}>
+              <Bar dataKey="rate" name="ヒット率" radius={[0, 4, 4, 0]}>
                 {cacheRateData.map((_, i) => (
                   <Cell key={i} fill={chart.series[i % chart.series.length]} />
                 ))}
@@ -181,7 +181,7 @@ export default function ModelAnalysisPage() {
         {/* Cost Comparison Table */}
         <div className="bg-panel rounded-xl p-6 border border-edge lg:col-span-2">
           <h3 className="text-sm font-medium text-ink-secondary mb-2 text-balance">
-            Model Cost Comparison
+            モデルコスト比較
           </h3>
           <p className="text-xs text-ink-muted mb-4">
             * API公開価格に基づく参考値。Maxプラン等の実際の請求額とは異なります。
@@ -190,13 +190,13 @@ export default function ModelAnalysisPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-edge">
-                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">Model</th>
+                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">モデル</th>
                   <th className="text-right py-3 px-4 text-ink-secondary font-medium">実コスト</th>
                   <th className="text-right py-3 px-4 text-ink-secondary font-medium">
                     <span title="キャッシュなしの場合の仮想コスト">キャッシュなし</span>
                   </th>
                   <th className="text-right py-3 px-4 text-ink-secondary font-medium">キャッシュ節約</th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">Hit Rate</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">ヒット率</th>
                 </tr>
               </thead>
               <tbody>
@@ -252,7 +252,7 @@ export default function ModelAnalysisPage() {
         {/* Daily Model Trend */}
         <div className="bg-panel rounded-xl p-6 border border-edge lg:col-span-2">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            Daily Model Usage Trend
+            日次モデル使用トレンド
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={trendData}>
@@ -314,7 +314,7 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   return (
     <div className="flex items-center justify-center h-64">
       <div className="bg-panel rounded-xl p-8 border border-highlight text-center max-w-md">
-        <p className="text-highlight font-medium mb-2">Failed to load data</p>
+        <p className="text-highlight font-medium mb-2">データの読み込みに失敗しました</p>
         <p className="text-ink-secondary text-sm mb-4">{message}</p>
         <button
           onClick={onRetry}

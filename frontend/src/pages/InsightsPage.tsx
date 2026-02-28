@@ -60,7 +60,7 @@ export default function InsightsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-ink text-balance">Insights</h2>
+          <h2 className="text-2xl font-bold text-ink text-balance">インサイト</h2>
           <p className="text-xs text-ink-muted mt-0.5">
             集計TZ: {data.timezone} / プロジェクト集中度は live データ基準
           </p>
@@ -91,12 +91,12 @@ export default function InsightsPage() {
       {/* Cache Efficiency KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <StatCard
-          title="Overall Cache Hit Rate"
+          title="全体キャッシュヒット率"
           value={`${(data.cacheEfficiency.overallRate * 100).toFixed(1)}%`}
           color="accent"
         />
         <StatCard
-          title="Total Cache Savings"
+          title="キャッシュ節約額合計"
           value={formatCost(data.cacheEfficiency.totalSavings)}
           color="accent"
         />
@@ -106,15 +106,15 @@ export default function InsightsPage() {
         {/* Cache Efficiency by Model */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            Cache Efficiency by Model
+            モデル別キャッシュ効率
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-edge">
-                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">Model</th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">Hit Rate</th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">Savings</th>
+                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">モデル</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">ヒット率</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">節約額</th>
                 </tr>
               </thead>
               <tbody>
@@ -137,7 +137,7 @@ export default function InsightsPage() {
         {/* Downgrade Suggestions */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            Optimization Suggestions
+            最適化提案
           </h3>
           {data.downgradeSuggestions.length > 0 ? (
             <div className="space-y-3">
@@ -169,7 +169,7 @@ export default function InsightsPage() {
         {/* Peak Hours */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            Peak Usage Hours ({data.timezone})
+            ピーク利用時間帯 ({data.timezone})
           </h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={peakData}>
@@ -188,7 +188,7 @@ export default function InsightsPage() {
         {/* Weekly Cost Trend */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            Weekly Cost Trend
+            週次コストトレンド
           </h3>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={weeklyData}>
@@ -218,7 +218,7 @@ export default function InsightsPage() {
         {/* Project Concentration */}
         <div className="bg-panel rounded-xl p-6 border border-edge lg:col-span-2">
           <h3 className="text-sm font-medium text-ink-secondary mb-1 text-balance">
-            Project Concentration
+            プロジェクト集中度
           </h3>
           <p className="text-xs text-ink-muted mb-4">
             合計 {data.projectConcentration.totalProjects} プロジェクト
@@ -285,7 +285,7 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   return (
     <div className="flex items-center justify-center h-64">
       <div className="bg-panel rounded-xl p-8 border border-highlight text-center max-w-md">
-        <p className="text-highlight font-medium mb-2">Failed to load data</p>
+        <p className="text-highlight font-medium mb-2">データの読み込みに失敗しました</p>
         <p className="text-ink-secondary text-sm mb-4">{message}</p>
         <button
           onClick={onRetry}

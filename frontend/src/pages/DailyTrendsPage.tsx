@@ -85,6 +85,8 @@ export default function DailyTrendsPage() {
       )
     : null;
 
+  const uniqueSessions = data?.summary?.uniqueSessions ?? summary?.totalSessions ?? 0;
+
   const avgDailyCost =
     summary && data && data.daily.length > 0
       ? summary.totalCost / data.daily.length
@@ -96,7 +98,7 @@ export default function DailyTrendsPage() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-bold text-ink text-balance">
-            {mode === "daily" ? "Daily" : "Weekly"} Trends
+            {mode === "daily" ? "日次" : "週次"}トレンド
           </h2>
           <p className="text-xs text-ink-muted mt-0.5">TZ: {tz}</p>
         </div>
@@ -112,7 +114,7 @@ export default function DailyTrendsPage() {
                   : "text-ink-secondary hover:text-ink",
               )}
             >
-              Daily
+              日次
             </button>
             <button
               onClick={() => setMode("weekly")}
@@ -123,7 +125,7 @@ export default function DailyTrendsPage() {
                   : "text-ink-secondary hover:text-ink",
               )}
             >
-              Weekly
+              週次
             </button>
           </div>
 
@@ -196,14 +198,14 @@ export default function DailyTrendsPage() {
             </p>
             {avgDailyCost !== null && (
               <p className="text-ink-muted text-xs mt-0.5">
-                日均 ${avgDailyCost.toFixed(2)}
+                日平均 ${avgDailyCost.toFixed(2)}
               </p>
             )}
           </div>
           <div className="bg-panel rounded-xl p-4 border border-edge">
             <p className="text-ink-secondary text-xs font-medium">期間セッション数</p>
             <p className="text-xl font-bold text-accent mt-1 tabular-nums">
-              {summary.totalSessions.toLocaleString()}
+              {uniqueSessions.toLocaleString()}
             </p>
           </div>
           <div className="bg-panel rounded-xl p-4 border border-edge">
@@ -223,7 +225,7 @@ export default function DailyTrendsPage() {
           {/* Token Stacked Bar Chart */}
           <div className="bg-panel rounded-xl p-6 border border-edge">
             <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-              {mode === "daily" ? "Daily" : "Weekly"} Token Usage
+              {mode === "daily" ? "日次" : "週次"}トークン使用量
             </h3>
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={chartData}>
@@ -243,10 +245,10 @@ export default function DailyTrendsPage() {
                     <span style={{ color: chart.legendText, fontSize: "12px" }}>{value}</span>
                   )}
                 />
-                <Bar dataKey="inputTokens" name="Input" stackId="a" fill={chart.series[0]} />
-                <Bar dataKey="outputTokens" name="Output" stackId="a" fill={chart.series[1]} />
-                <Bar dataKey="cacheReadTokens" name="Cache Read" stackId="a" fill={chart.series[2]} />
-                <Bar dataKey="cacheCreationTokens" name="Cache Create" stackId="a" fill={chart.series[3]} />
+                <Bar dataKey="inputTokens" name="入力" stackId="a" fill={chart.series[0]} />
+                <Bar dataKey="outputTokens" name="出力" stackId="a" fill={chart.series[1]} />
+                <Bar dataKey="cacheReadTokens" name="キャッシュ読込" stackId="a" fill={chart.series[2]} />
+                <Bar dataKey="cacheCreationTokens" name="キャッシュ生成" stackId="a" fill={chart.series[3]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -254,7 +256,7 @@ export default function DailyTrendsPage() {
           {/* Daily Cost Line Chart */}
           <div className="bg-panel rounded-xl p-6 border border-edge">
             <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-              {mode === "daily" ? "Daily" : "Weekly"} Estimated Cost
+              {mode === "daily" ? "日次" : "週次"}推定コスト
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData}>
@@ -272,7 +274,7 @@ export default function DailyTrendsPage() {
                 <Line
                   type="monotone"
                   dataKey="estimatedCost"
-                  name="Cost"
+                  name="コスト"
                   stroke={chart.highlight}
                   strokeWidth={2}
                   dot={{ fill: chart.highlight, r: 3 }}
@@ -284,7 +286,7 @@ export default function DailyTrendsPage() {
           {/* Sessions Chart */}
           <div className="bg-panel rounded-xl p-6 border border-edge">
             <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-              {mode === "daily" ? "Daily" : "Weekly"} Sessions
+              {mode === "daily" ? "日次" : "週次"}セッション数
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData}>
@@ -297,7 +299,7 @@ export default function DailyTrendsPage() {
                 />
                 <Bar
                   dataKey="sessionCount"
-                  name="Sessions"
+                  name="セッション数"
                   fill={chart.series[0]}
                   radius={[4, 4, 0, 0]}
                 />
@@ -335,7 +337,7 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   return (
     <div className="flex items-center justify-center h-64">
       <div className="bg-panel rounded-xl p-8 border border-highlight text-center max-w-md">
-        <p className="text-highlight font-medium mb-2">Failed to load data</p>
+        <p className="text-highlight font-medium mb-2">データの読み込みに失敗しました</p>
         <p className="text-ink-secondary text-sm mb-4">{message}</p>
         <button
           onClick={onRetry}

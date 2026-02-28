@@ -65,7 +65,7 @@ export default function ProjectsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-ink text-balance">Projects</h2>
+          <h2 className="text-2xl font-bold text-ink text-balance">プロジェクト</h2>
           <p className="text-xs text-ink-muted mt-0.5">
             プロジェクト別集計は live データのみ ({data.coverage.timezone})
           </p>
@@ -98,7 +98,7 @@ export default function ProjectsPage() {
         <div className="bg-panel rounded-xl p-6 border border-edge lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-ink-secondary text-balance">
-              Project Rankings (by Cost)
+              プロジェクトランキング（コスト順）
             </h3>
             <p className="text-xs text-ink-muted flex items-center gap-1">
               <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -112,13 +112,13 @@ export default function ProjectsPage() {
               <thead>
                 <tr className="border-b border-edge">
                   <th className="text-left py-3 px-4 text-ink-secondary font-medium">#</th>
-                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">Project</th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">Sessions</th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">Total Tokens</th>
+                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">プロジェクト</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">セッション</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">総トークン数</th>
                   <th className="text-right py-3 px-4 text-ink-secondary font-medium">
-                    <span title="価格未定義モデルのトークン数">未定義モデルTokens ⓘ</span>
+                    <span title="価格未定義モデルのトークン数">未定義モデルトークン ⓘ</span>
                   </th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">Cost</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">コスト</th>
                   <th className="text-center py-3 px-4 text-ink-secondary font-medium w-8"></th>
                 </tr>
               </thead>
@@ -160,7 +160,7 @@ export default function ProjectsPage() {
         {/* Cost Distribution Pie */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            Cost Distribution
+            コスト分布
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -192,7 +192,7 @@ export default function ProjectsPage() {
         {/* Top Tools for Selected Project */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-1 text-balance">
-            Top Tools
+            使用ツールランキング
           </h3>
           <p className="text-xs text-ink-muted mb-4">
             {selected ? (
@@ -255,7 +255,7 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   return (
     <div className="flex items-center justify-center h-64">
       <div className="bg-panel rounded-xl p-8 border border-highlight text-center max-w-md">
-        <p className="text-highlight font-medium mb-2">Failed to load data</p>
+        <p className="text-highlight font-medium mb-2">データの読み込みに失敗しました</p>
         <p className="text-ink-secondary text-sm mb-4">{message}</p>
         <button
           onClick={onRetry}

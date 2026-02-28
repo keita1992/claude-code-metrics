@@ -1,4 +1,4 @@
-"""JONLファイルのパーサー。693MB超のファイルを効率的に処理する。"""
+"""JSONLファイルのパーサー。大規模ファイルを効率的に処理する。"""
 
 from datetime import UTC, date, datetime
 from zoneinfo import ZoneInfo
@@ -12,12 +12,27 @@ from config import PROJECTS_DIR
 JST = ZoneInfo("Asia/Tokyo")
 
 
-def _to_jst_date_hour(timestamp: str) -> tuple[str, int]:
-    """ISO8601タイムスタンプをJSTに変換し、日付と時を返す。"""
-    ts = timestamp.replace("Z", "+00:00")
-    dt = datetime.fromisoformat(ts)
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=UTC)
+def _to_jst_date_hour(timestamp: str | int | float) -> tuple[str, int]:
+    """タイムスタンプをJSTに変換し、日付と時を返す。"""
+    dt: datetime
+    if isinstance(timestamp, (int, float)):
+        # history.jsonl互換: UNIX epoch milliseconds
+        dt = datetime.fromtimestamp(float(timestamp) / 1000.0, tz=UTC)
+    elif isinstance(timestamp, str):
+        ts = timestamp.strip()
+        if not ts:
+            raise ValueError("empty timestamp")
+
+        # 数値文字列 (epoch milliseconds) も受け入れる
+        if ts.isdigit():
+            dt = datetime.fromtimestamp(float(ts) / 1000.0, tz=UTC)
+        else:
+            dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=UTC)
+    else:
+        raise TypeError("unsupported timestamp type")
+
     dt_jst = dt.astimezone(JST)
     return dt_jst.date().isoformat(), dt_jst.hour
 
@@ -35,10 +50,9 @@ def _extract_tool_names(content: list | None) -> list[str]:
 
 def parse_jsonl_files(since_date: date | None = None) -> pl.DataFrame:
     """
-    全プロジェクトのJONLファイルをパースしてDataFrameに変換。
+    全プロジェクトのJSONLファイルをパースしてDataFrameに変換。
 
     since_dateが指定された場合、そのJST日付以降のレコードのみを返す。
-    693MBのファイルを効率処理するため、行単位パース + バッチ変換。
     """
     records: list[dict] = []
     projects_dir = PROJECTS_DIR
@@ -69,7 +83,9 @@ def _parse_single_file(
     project_name: str,
     records: list[dict],
 ) -> None:
-    """単一のJONLファイルを行単位でパース"""
+    """単一のJSONLファイルを行単位でパース"""
+    since_iso = since_date.isoformat() if since_date is not None else ""
+
     with open(path, "rb") as f:
         for line in f:
             line = line.strip()
@@ -81,7 +97,7 @@ def _parse_single_file(
                 continue
 
             ts = obj.get("timestamp")
-            if not ts:
+            if ts is None:
                 continue
 
             try:
@@ -90,7 +106,7 @@ def _parse_single_file(
                 continue
 
             # JST日付でフィルタ
-            if since_date is not None and row_date < since_date.isoformat():
+            if since_iso and row_date < since_iso:
                 continue
 
             msg_type = obj.get("type", "")
@@ -116,7 +132,7 @@ def _parse_single_file(
                 tool_names = _extract_tool_names(message.get("content"))
 
             records.append({
-                "timestamp": ts,
+                "timestamp": str(ts),
                 "date": row_date,
                 "hour": row_hour,
                 "type": msg_type,
@@ -136,7 +152,7 @@ def _parse_single_file(
 
 def _resolve_project_name(dir_name: str) -> str:
     """ディレクトリ名からプロジェクト名を抽出。
-    例: '-Users-private-dev-musubi' → 'musubi'
+    例: '-Users-private-dev-musubi' -> 'musubi'
     """
     parts = dir_name.strip("-").split("-")
     return parts[-1] if parts else dir_name
