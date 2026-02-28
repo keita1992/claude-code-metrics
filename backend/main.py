@@ -6,7 +6,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, ORJSONResponse  # orjsonシリアライズ用
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from routers import daily, insights, models, overview, projects
@@ -36,7 +36,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Claude Code Dashboard API",
     lifespan=lifespan,
-    default_response_class=ORJSONResponse,
 )
 
 app.add_middleware(

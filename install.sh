@@ -211,14 +211,21 @@ echo "  URL: $URL"
 echo "  停止: Ctrl+C"
 echo ""
 
-# バックグラウンドでブラウザを開く
+# サーバーが応答可能になってからブラウザを開く
 (
-    sleep 2
-    if command -v open >/dev/null 2>&1; then
-        open "$URL"
-    elif command -v xdg-open >/dev/null 2>&1; then
-        xdg-open "$URL"
-    fi
+    i=0
+    while [ "$i" -lt 30 ]; do
+        if curl -s -o /dev/null "$URL/api/health" 2>/dev/null; then
+            if command -v open >/dev/null 2>&1; then
+                open "$URL"
+            elif command -v xdg-open >/dev/null 2>&1; then
+                xdg-open "$URL"
+            fi
+            break
+        fi
+        sleep 0.5
+        i=$((i + 1))
+    done
 ) &
 
 # サーバー起動（フォアグラウンド）
