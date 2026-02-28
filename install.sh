@@ -167,18 +167,17 @@ if [ ! -d "$INSTALL_DIR" ]; then
     exit 1
 fi
 
-# ポートの空きチェック
+# ポートの空きチェック（実際にbindを試みる方式で確実に判定）
 is_port_available() {
-    if command -v lsof >/dev/null 2>&1; then
-        ! lsof -i :"$1" >/dev/null 2>&1
-    elif command -v ss >/dev/null 2>&1; then
-        ! ss -tln 2>/dev/null | grep -q ":$1 "
-    elif command -v netstat >/dev/null 2>&1; then
-        ! netstat -tln 2>/dev/null | grep -q ":$1 "
-    else
-        # チェックツールがない場合は空いていると仮定して起動を試みる
-        return 0
-    fi
+    python3 -c "
+import socket, sys
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+try:
+    s.bind(('127.0.0.1', int(sys.argv[1])))
+    s.close()
+except OSError:
+    sys.exit(1)
+" "$1" 2>/dev/null
 }
 
 if [ "$PORT_EXPLICIT" = "true" ]; then
