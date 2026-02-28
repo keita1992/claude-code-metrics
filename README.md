@@ -4,6 +4,8 @@ Claude Code のローカル利用データ（`~/.claude`）を可視化・分析
 
 トークン使用量、API コスト、キャッシュ効率、プロジェクト別統計などを直感的なグラフで把握できます。
 
+**デモ（インストール不要）:** https://keita1992.github.io/claude-code-metrics/
+
 ![スクリーンショット](docs/screenshot.png)
 
 ## 主な機能
