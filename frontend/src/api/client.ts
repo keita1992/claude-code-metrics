@@ -1,3 +1,7 @@
+import * as mock from "./mockData";
+
+const DEMO = import.meta.env.VITE_DEMO_MODE === "true";
+
 // --- Response Types ---
 
 export interface DataCoverage {
@@ -124,34 +128,40 @@ async function fetchJSON<T>(url: string): Promise<T> {
 }
 
 export function fetchOverview(): Promise<OverviewData> {
+  if (DEMO) return Promise.resolve(mock.MOCK_OVERVIEW);
   return fetchJSON<OverviewData>("/api/overview");
 }
 
-export function fetchDaily(start?: string, end?: string, mode: "daily" | "weekly" = "daily"): Promise<DailyData> {
+export function fetchDaily(_start?: string, _end?: string, _mode: "daily" | "weekly" = "daily"): Promise<DailyData> {
+  if (DEMO) return Promise.resolve(mock.MOCK_DAILY);
   const params = new URLSearchParams();
-  if (start) params.set("start", start);
-  if (end) params.set("end", end);
-  if (mode === "weekly") params.set("mode", "weekly");
+  if (_start) params.set("start", _start);
+  if (_end) params.set("end", _end);
+  if (_mode === "weekly") params.set("mode", "weekly");
   const qs = params.toString();
   return fetchJSON<DailyData>(`/api/daily${qs ? `?${qs}` : ""}`);
 }
 
 export function fetchModels(): Promise<ModelsData> {
+  if (DEMO) return Promise.resolve(mock.MOCK_MODELS);
   return fetchJSON<ModelsData>("/api/models");
 }
 
 export function fetchProjects(): Promise<ProjectsData> {
+  if (DEMO) return Promise.resolve(mock.MOCK_PROJECTS);
   return fetchJSON<ProjectsData>("/api/projects");
 }
 
 export function fetchInsights(): Promise<InsightsData> {
+  if (DEMO) return Promise.resolve(mock.MOCK_INSIGHTS);
   return fetchJSON<InsightsData>("/api/insights");
 }
 
-export function fetchHeatmap(start?: string, end?: string): Promise<HeatmapData> {
+export function fetchHeatmap(_start?: string, _end?: string): Promise<HeatmapData> {
+  if (DEMO) return Promise.resolve(mock.MOCK_HEATMAP);
   const params = new URLSearchParams();
-  if (start) params.set("start", start);
-  if (end) params.set("end", end);
+  if (_start) params.set("start", _start);
+  if (_end) params.set("end", _end);
   const qs = params.toString();
   return fetchJSON<HeatmapData>(`/api/heatmap${qs ? `?${qs}` : ""}`);
 }
