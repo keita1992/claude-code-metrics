@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { fetchDaily, type DailyData } from "../api/client";
 import { useTheme } from "../context/ThemeContext";
+import { useLang } from "../context/LanguageContext";
 import { cn } from "../lib/utils";
 
 const DEFAULT_TIMEZONE = "Asia/Tokyo";
@@ -27,12 +28,6 @@ function formatDateInTZ(daysAgo: number, tz: string): string {
   }).format(target);
 }
 
-const DATE_PRESETS = [
-  { label: "7日", days: 7 },
-  { label: "30日", days: 30 },
-  { label: "90日", days: 90 },
-];
-
 export default function DailyTrendsPage() {
   const [data, setData] = useState<DailyData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +37,13 @@ export default function DailyTrendsPage() {
   const [endDate, setEndDate] = useState(() => formatDateInTZ(0, DEFAULT_TIMEZONE));
   const [mode, setMode] = useState<"daily" | "weekly">("daily");
   const { chart } = useTheme();
+  const { t } = useLang();
+
+  const DATE_PRESETS = [
+    { label: t.daily.preset7, days: 7 },
+    { label: t.daily.preset30, days: 30 },
+    { label: t.daily.preset90, days: 90 },
+  ];
 
   const load = useCallback(() => {
     setLoading(true);
@@ -94,16 +96,14 @@ export default function DailyTrendsPage() {
 
   return (
     <div className="space-y-6">
-      {/* ヘッダー */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-bold text-ink text-balance">
-            {mode === "daily" ? "日次" : "週次"}トレンド
+            {mode === "daily" ? t.daily.titleDaily : t.daily.titleWeekly}
           </h2>
           <p className="text-xs text-ink-muted mt-0.5">TZ: {tz}</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          {/* モード切替 */}
           <div className="flex bg-panel-hover rounded-lg border border-edge overflow-hidden">
             <button
               onClick={() => setMode("daily")}
@@ -114,7 +114,7 @@ export default function DailyTrendsPage() {
                   : "text-ink-secondary hover:text-ink",
               )}
             >
-              日次
+              {t.daily.modeDaily}
             </button>
             <button
               onClick={() => setMode("weekly")}
@@ -125,11 +125,10 @@ export default function DailyTrendsPage() {
                   : "text-ink-secondary hover:text-ink",
               )}
             >
-              週次
+              {t.daily.modeWeekly}
             </button>
           </div>
 
-          {/* クイック選択（Daily モードのみ） */}
           {mode === "daily" && (
             <div className="flex gap-1">
               {DATE_PRESETS.map((p) => (
@@ -144,7 +143,6 @@ export default function DailyTrendsPage() {
             </div>
           )}
 
-          {/* 日付範囲（Daily モードのみ） */}
           {mode === "daily" && (
             <div className="flex items-center gap-2">
               <input
@@ -153,7 +151,7 @@ export default function DailyTrendsPage() {
                 onChange={(e) => setStartDate(e.target.value)}
                 className="bg-panel border border-edge rounded-lg px-3 py-1.5 text-sm text-ink focus:outline-none focus:border-accent"
               />
-              <span className="text-ink-muted text-sm">〜</span>
+              <span className="text-ink-muted text-sm">{t.common.to}</span>
               <input
                 type="date"
                 value={endDate}
@@ -163,11 +161,10 @@ export default function DailyTrendsPage() {
             </div>
           )}
 
-          {/* リフレッシュボタン */}
           <button
             onClick={load}
             disabled={loading}
-            title="データを再読み込み"
+            title={t.common.refreshTitle}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-panel border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg
@@ -183,33 +180,32 @@ export default function DailyTrendsPage() {
                 d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
               />
             </svg>
-            更新
+            {t.common.refresh}
           </button>
         </div>
       </div>
 
-      {/* 期間サマリー */}
       {summary && !loading && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="bg-panel rounded-xl p-4 border border-edge">
-            <p className="text-ink-secondary text-xs font-medium">期間合計コスト</p>
+            <p className="text-ink-secondary text-xs font-medium">{t.daily.periodCost}</p>
             <p className="text-xl font-bold text-highlight mt-1 tabular-nums">
               ${summary.totalCost.toFixed(2)}
             </p>
             {avgDailyCost !== null && (
               <p className="text-ink-muted text-xs mt-0.5">
-                日平均 ${avgDailyCost.toFixed(2)}
+                {t.daily.periodDailyAvg} ${avgDailyCost.toFixed(2)}
               </p>
             )}
           </div>
           <div className="bg-panel rounded-xl p-4 border border-edge">
-            <p className="text-ink-secondary text-xs font-medium">期間セッション数</p>
+            <p className="text-ink-secondary text-xs font-medium">{t.daily.periodSessions}</p>
             <p className="text-xl font-bold text-accent mt-1 tabular-nums">
               {uniqueSessions.toLocaleString()}
             </p>
           </div>
           <div className="bg-panel rounded-xl p-4 border border-edge">
-            <p className="text-ink-secondary text-xs font-medium">期間総トークン数</p>
+            <p className="text-ink-secondary text-xs font-medium">{t.daily.periodTokens}</p>
             <p className="text-xl font-bold text-accent mt-1 tabular-nums">
               {(summary.totalTokens / 1_000_000).toFixed(2)}M
             </p>
@@ -222,10 +218,9 @@ export default function DailyTrendsPage() {
 
       {chartData && !loading && (
         <div className="grid grid-cols-1 gap-6">
-          {/* Token Stacked Bar Chart */}
           <div className="bg-panel rounded-xl p-6 border border-edge">
             <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-              {mode === "daily" ? "日次" : "週次"}トークン使用量
+              {mode === "daily" ? t.daily.tokenChartDaily : t.daily.tokenChartWeekly}
             </h3>
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={chartData}>
@@ -245,18 +240,17 @@ export default function DailyTrendsPage() {
                     <span style={{ color: chart.legendText, fontSize: "12px" }}>{value}</span>
                   )}
                 />
-                <Bar dataKey="inputTokens" name="入力" stackId="a" fill={chart.series[0]} />
-                <Bar dataKey="outputTokens" name="出力" stackId="a" fill={chart.series[1]} />
-                <Bar dataKey="cacheReadTokens" name="キャッシュ読込" stackId="a" fill={chart.series[2]} />
-                <Bar dataKey="cacheCreationTokens" name="キャッシュ生成" stackId="a" fill={chart.series[3]} />
+                <Bar dataKey="inputTokens" name={t.daily.input} stackId="a" fill={chart.series[0]} />
+                <Bar dataKey="outputTokens" name={t.daily.output} stackId="a" fill={chart.series[1]} />
+                <Bar dataKey="cacheReadTokens" name={t.daily.cacheRead} stackId="a" fill={chart.series[2]} />
+                <Bar dataKey="cacheCreationTokens" name={t.daily.cacheCreation} stackId="a" fill={chart.series[3]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Daily Cost Line Chart */}
           <div className="bg-panel rounded-xl p-6 border border-edge">
             <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-              {mode === "daily" ? "日次" : "週次"}推定コスト
+              {mode === "daily" ? t.daily.costChartDaily : t.daily.costChartWeekly}
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData}>
@@ -274,7 +268,7 @@ export default function DailyTrendsPage() {
                 <Line
                   type="monotone"
                   dataKey="estimatedCost"
-                  name="コスト"
+                  name={t.daily.cost}
                   stroke={chart.highlight}
                   strokeWidth={2}
                   dot={{ fill: chart.highlight, r: 3 }}
@@ -283,10 +277,9 @@ export default function DailyTrendsPage() {
             </ResponsiveContainer>
           </div>
 
-          {/* Sessions Chart */}
           <div className="bg-panel rounded-xl p-6 border border-edge">
             <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-              {mode === "daily" ? "日次" : "週次"}セッション数
+              {mode === "daily" ? t.daily.sessionChartDaily : t.daily.sessionChartWeekly}
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData}>
@@ -299,7 +292,7 @@ export default function DailyTrendsPage() {
                 />
                 <Bar
                   dataKey="sessionCount"
-                  name="セッション数"
+                  name={t.daily.sessionLabel}
                   fill={chart.series[0]}
                   radius={[4, 4, 0, 0]}
                 />
@@ -334,16 +327,17 @@ function LoadingSkeleton() {
 }
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useLang();
   return (
     <div className="flex items-center justify-center h-64">
       <div className="bg-panel rounded-xl p-8 border border-highlight text-center max-w-md">
-        <p className="text-highlight font-medium mb-2">データの読み込みに失敗しました</p>
+        <p className="text-highlight font-medium mb-2">{t.common.loadError}</p>
         <p className="text-ink-secondary text-sm mb-4">{message}</p>
         <button
           onClick={onRetry}
           className="px-4 py-2 text-sm font-medium bg-panel-hover border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors"
         >
-          再試行
+          {t.common.retry}
         </button>
       </div>
     </div>

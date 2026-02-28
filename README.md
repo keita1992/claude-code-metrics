@@ -1,5 +1,7 @@
 # Claude Code Metrics
 
+[English](README.en.md) | 日本語
+
 Claude Code のローカル利用データ（`~/.claude`）を可視化・分析するセルフホスト型ダッシュボードです。
 
 トークン使用量、API コスト、キャッシュ効率、プロジェクト別統計などを直感的なグラフで把握できます。

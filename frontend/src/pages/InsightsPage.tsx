@@ -17,6 +17,7 @@ import {
 import { fetchInsights, type InsightsData } from "../api/client";
 import StatCard from "../components/StatCard";
 import { useTheme } from "../context/ThemeContext";
+import { useLang } from "../context/LanguageContext";
 import { cn } from "../lib/utils";
 
 function formatCost(n: number): string {
@@ -28,6 +29,7 @@ export default function InsightsPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { chart } = useTheme();
+  const { t } = useLang();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -60,15 +62,15 @@ export default function InsightsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-ink text-balance">インサイト</h2>
+          <h2 className="text-2xl font-bold text-ink text-balance">{t.insights.title}</h2>
           <p className="text-xs text-ink-muted mt-0.5">
-            集計TZ: {data.timezone} / プロジェクト集中度は live データ基準
+            {t.common.aggregationTz}: {data.timezone} / {t.insights.subtitleLive}
           </p>
         </div>
         <button
           onClick={load}
           disabled={loading}
-          title="データを再読み込み"
+          title={t.common.refreshTitle}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-panel border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
@@ -84,37 +86,35 @@ export default function InsightsPage() {
               d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
             />
           </svg>
-          更新
+          {t.common.refresh}
         </button>
       </div>
 
-      {/* Cache Efficiency KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <StatCard
-          title="全体キャッシュヒット率"
+          title={t.insights.overallCacheRate}
           value={`${(data.cacheEfficiency.overallRate * 100).toFixed(1)}%`}
           color="accent"
         />
         <StatCard
-          title="キャッシュ節約額合計"
+          title={t.insights.totalCacheSavings}
           value={formatCost(data.cacheEfficiency.totalSavings)}
           color="accent"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Cache Efficiency by Model */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            モデル別キャッシュ効率
+            {t.insights.cacheByModel}
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-edge">
-                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">モデル</th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">ヒット率</th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">節約額</th>
+                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">{t.insights.colModel}</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">{t.insights.colHitRate}</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">{t.insights.colSavings}</th>
                 </tr>
               </thead>
               <tbody>
@@ -134,21 +134,17 @@ export default function InsightsPage() {
           </div>
         </div>
 
-        {/* Downgrade Suggestions */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            最適化提案
+            {t.insights.optimizationSuggestions}
           </h3>
           {data.downgradeSuggestions.length > 0 ? (
             <div className="space-y-3">
               {data.downgradeSuggestions.map((s, i) => (
-                <div
-                  key={i}
-                  className="bg-panel-hover rounded-lg p-4 border border-edge"
-                >
+                <div key={i} className="bg-panel-hover rounded-lg p-4 border border-edge">
                   <p className="text-ink text-sm">{s.description}</p>
                   <p className="text-accent text-sm font-medium mt-2">
-                    節約見込み: {formatCost(s.potentialSavings)}
+                    {t.insights.potentialSavings}{formatCost(s.potentialSavings)}
                   </p>
                 </div>
               ))}
@@ -160,16 +156,15 @@ export default function InsightsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
               </div>
-              <p className="text-ink-secondary text-sm font-medium">最適化済み</p>
-              <p className="text-ink-muted text-xs mt-1">現在の利用パターンに改善提案はありません</p>
+              <p className="text-ink-secondary text-sm font-medium">{t.insights.optimized}</p>
+              <p className="text-ink-muted text-xs mt-1">{t.insights.optimizedDesc}</p>
             </div>
           )}
         </div>
 
-        {/* Peak Hours */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            ピーク利用時間帯 ({data.timezone})
+            {t.insights.peakHours} ({data.timezone})
           </h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={peakData}>
@@ -185,10 +180,9 @@ export default function InsightsPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* Weekly Cost Trend */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            週次コストトレンド
+            {t.insights.weeklyTrend}
           </h3>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={weeklyData}>
@@ -215,13 +209,12 @@ export default function InsightsPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* Project Concentration */}
         <div className="bg-panel rounded-xl p-6 border border-edge lg:col-span-2">
           <h3 className="text-sm font-medium text-ink-secondary mb-1 text-balance">
-            プロジェクト集中度
+            {t.insights.projectConcentration}
           </h3>
           <p className="text-xs text-ink-muted mb-4">
-            合計 {data.projectConcentration.totalProjects} プロジェクト
+            {t.insights.totalProjectsTemplate.replace("{n}", String(data.projectConcentration.totalProjects))}
           </p>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -282,16 +275,17 @@ function LoadingSkeleton() {
 }
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useLang();
   return (
     <div className="flex items-center justify-center h-64">
       <div className="bg-panel rounded-xl p-8 border border-highlight text-center max-w-md">
-        <p className="text-highlight font-medium mb-2">データの読み込みに失敗しました</p>
+        <p className="text-highlight font-medium mb-2">{t.common.loadError}</p>
         <p className="text-ink-secondary text-sm mb-4">{message}</p>
         <button
           onClick={onRetry}
           className="px-4 py-2 text-sm font-medium bg-panel-hover border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors"
         >
-          再試行
+          {t.common.retry}
         </button>
       </div>
     </div>

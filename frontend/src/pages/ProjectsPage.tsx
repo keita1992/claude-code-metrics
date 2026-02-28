@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { fetchProjects, type ProjectsData } from "../api/client";
 import { useTheme } from "../context/ThemeContext";
+import { useLang } from "../context/LanguageContext";
 import { cn } from "../lib/utils";
 
 function formatCost(n: number): string {
@@ -26,6 +27,7 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const { chart } = useTheme();
+  const { t } = useLang();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -65,15 +67,15 @@ export default function ProjectsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-ink text-balance">プロジェクト</h2>
+          <h2 className="text-2xl font-bold text-ink text-balance">{t.projects.title}</h2>
           <p className="text-xs text-ink-muted mt-0.5">
-            プロジェクト別集計は live データのみ ({data.coverage.timezone})
+            {t.projects.subtitle} ({data.coverage.timezone})
           </p>
         </div>
         <button
           onClick={load}
           disabled={loading}
-          title="データを再読み込み"
+          title={t.common.refreshTitle}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-panel border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
@@ -89,36 +91,35 @@ export default function ProjectsPage() {
               d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
             />
           </svg>
-          更新
+          {t.common.refresh}
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Project Table */}
         <div className="bg-panel rounded-xl p-6 border border-edge lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-ink-secondary text-balance">
-              プロジェクトランキング（コスト順）
+              {t.projects.ranking}
             </h3>
             <p className="text-xs text-ink-muted flex items-center gap-1">
               <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672 13.684 16.6m0 0-2.51 2.225.569-9.47 5.227 7.917-3.286-.672ZM12 2.25V4.5m5.834.166-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243-1.59-1.59" />
               </svg>
-              行をクリックするとツール詳細が表示されます
+              {t.projects.clickHint}
             </p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-edge">
-                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">#</th>
-                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">プロジェクト</th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">セッション</th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">総トークン数</th>
+                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">{t.projects.colRank}</th>
+                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">{t.projects.colProject}</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">{t.projects.colSessions}</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">{t.projects.colTokens}</th>
                   <th className="text-right py-3 px-4 text-ink-secondary font-medium">
-                    <span title="価格未定義モデルのトークン数">未定義モデルトークン ⓘ</span>
+                    <span title={t.projects.colUnknownTokensTitle}>{t.projects.colUnknownTokens} ⓘ</span>
                   </th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">コスト</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">{t.projects.colCost}</th>
                   <th className="text-center py-3 px-4 text-ink-secondary font-medium w-8"></th>
                 </tr>
               </thead>
@@ -157,10 +158,9 @@ export default function ProjectsPage() {
           </div>
         </div>
 
-        {/* Cost Distribution Pie */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            コスト分布
+            {t.projects.costDistribution}
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -189,18 +189,18 @@ export default function ProjectsPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* Top Tools for Selected Project */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-1 text-balance">
-            使用ツールランキング
+            {t.projects.toolRanking}
           </h3>
           <p className="text-xs text-ink-muted mb-4">
             {selected ? (
               <span>
-                <span className="text-accent">{selected.name}</span> のツール使用回数
+                <span className="text-accent">{selected.name}</span>
+                {t.projects.toolRankingOf}
               </span>
             ) : (
-              "プロジェクトを選択してください"
+              t.projects.selectProject
             )}
           </p>
           {toolData.length > 0 ? (
@@ -222,7 +222,7 @@ export default function ProjectsPage() {
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-64 text-ink-muted text-sm">
-              ツールデータがありません
+              {t.projects.noToolData}
             </div>
           )}
         </div>
@@ -252,16 +252,17 @@ function LoadingSkeleton() {
 }
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useLang();
   return (
     <div className="flex items-center justify-center h-64">
       <div className="bg-panel rounded-xl p-8 border border-highlight text-center max-w-md">
-        <p className="text-highlight font-medium mb-2">データの読み込みに失敗しました</p>
+        <p className="text-highlight font-medium mb-2">{t.common.loadError}</p>
         <p className="text-ink-secondary text-sm mb-4">{message}</p>
         <button
           onClick={onRetry}
           className="px-4 py-2 text-sm font-medium bg-panel-hover border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors"
         >
-          再試行
+          {t.common.retry}
         </button>
       </div>
     </div>

@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { fetchModels, type ModelsData } from "../api/client";
 import { useTheme } from "../context/ThemeContext";
+import { useLang } from "../context/LanguageContext";
 import { cn } from "../lib/utils";
 
 function formatCost(n: number | null): string {
@@ -26,6 +27,7 @@ export default function ModelAnalysisPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { chart } = useTheme();
+  const { t } = useLang();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -76,13 +78,13 @@ export default function ModelAnalysisPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-ink text-balance">モデル分析</h2>
-          <p className="text-xs text-ink-muted mt-0.5">集計TZ: {data.coverage.timezone}</p>
+          <h2 className="text-2xl font-bold text-ink text-balance">{t.models.title}</h2>
+          <p className="text-xs text-ink-muted mt-0.5">{t.common.aggregationTz}: {data.coverage.timezone}</p>
         </div>
         <button
           onClick={load}
           disabled={loading}
-          title="データを再読み込み"
+          title={t.common.refreshTitle}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-panel border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
@@ -98,21 +100,20 @@ export default function ModelAnalysisPage() {
               d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
             />
           </svg>
-          更新
+          {t.common.refresh}
         </button>
       </div>
 
       {unknownModels.length > 0 && (
         <p className="text-xs text-highlight">
-          * 価格未定義モデル: {unknownModels.map((m) => m.model).join(", ")} (コストはN/A表示)
+          {t.models.unknownModelsTemplate.replace("{models}", unknownModels.map((m) => m.model).join(", "))}
         </p>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Token Usage by Model */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            モデル別トークン使用量
+            {t.models.tokenChart}
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={tokenData} layout="vertical">
@@ -122,12 +123,7 @@ export default function ModelAnalysisPage() {
                 tick={chart.axisTick}
                 tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
               />
-              <YAxis
-                type="category"
-                dataKey="model"
-                tick={chart.axisTick}
-                width={120}
-              />
+              <YAxis type="category" dataKey="model" tick={chart.axisTick} width={120} />
               <Tooltip
                 contentStyle={chart.tooltipStyle}
                 formatter={(value: number) => value.toLocaleString()}
@@ -137,18 +133,17 @@ export default function ModelAnalysisPage() {
                   <span style={{ color: chart.legendText, fontSize: "12px" }}>{value}</span>
                 )}
               />
-              <Bar dataKey="input" name="入力" stackId="a" fill={chart.series[0]} />
-              <Bar dataKey="output" name="出力" stackId="a" fill={chart.series[1]} />
-              <Bar dataKey="cacheRead" name="キャッシュ読込" stackId="a" fill={chart.series[2]} />
-              <Bar dataKey="cacheCreation" name="キャッシュ生成" stackId="a" fill={chart.series[3]} />
+              <Bar dataKey="input" name={t.models.input} stackId="a" fill={chart.series[0]} />
+              <Bar dataKey="output" name={t.models.output} stackId="a" fill={chart.series[1]} />
+              <Bar dataKey="cacheRead" name={t.models.cacheRead} stackId="a" fill={chart.series[2]} />
+              <Bar dataKey="cacheCreation" name={t.models.cacheCreation} stackId="a" fill={chart.series[3]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Cache Hit Rate */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            モデル別キャッシュヒット率
+            {t.models.cacheRateChart}
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={cacheRateData} layout="vertical">
@@ -159,17 +154,12 @@ export default function ModelAnalysisPage() {
                 tick={chart.axisTick}
                 tickFormatter={(v) => `${v}%`}
               />
-              <YAxis
-                type="category"
-                dataKey="model"
-                tick={chart.axisTick}
-                width={120}
-              />
+              <YAxis type="category" dataKey="model" tick={chart.axisTick} width={120} />
               <Tooltip
                 contentStyle={chart.tooltipStyle}
                 formatter={(value: number) => `${value.toFixed(1)}%`}
               />
-              <Bar dataKey="rate" name="ヒット率" radius={[0, 4, 4, 0]}>
+              <Bar dataKey="rate" name={t.models.cacheRateLabel} radius={[0, 4, 4, 0]}>
                 {cacheRateData.map((_, i) => (
                   <Cell key={i} fill={chart.series[i % chart.series.length]} />
                 ))}
@@ -178,38 +168,32 @@ export default function ModelAnalysisPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* Cost Comparison Table */}
         <div className="bg-panel rounded-xl p-6 border border-edge lg:col-span-2">
           <h3 className="text-sm font-medium text-ink-secondary mb-2 text-balance">
-            モデルコスト比較
+            {t.models.costTable}
           </h3>
-          <p className="text-xs text-ink-muted mb-4">
-            * API公開価格に基づく参考値。Maxプラン等の実際の請求額とは異なります。
-          </p>
+          <p className="text-xs text-ink-muted mb-4">{t.models.costTableNote}</p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-edge">
-                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">モデル</th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">実コスト</th>
+                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">{t.models.colModel}</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">{t.models.colActualCost}</th>
                   <th className="text-right py-3 px-4 text-ink-secondary font-medium">
-                    <span title="キャッシュなしの場合の仮想コスト">キャッシュなし</span>
+                    <span title={t.models.colWithoutCacheTitle}>{t.models.colWithoutCache}</span>
                   </th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">キャッシュ節約</th>
-                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">ヒット率</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">{t.models.colCacheSavings}</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">{t.models.colHitRate}</th>
                 </tr>
               </thead>
               <tbody>
                 {data.models.map((m) => (
-                  <tr
-                    key={m.modelId}
-                    className="border-b border-edge-subtle hover:bg-panel-hover"
-                  >
+                  <tr key={m.modelId} className="border-b border-edge-subtle hover:bg-panel-hover">
                     <td className="py-3 px-4 text-ink font-medium">
                       {m.model}
                       {!m.isPriceKnown && (
                         <span className="ml-2 text-xs text-highlight bg-highlight-subtle px-1.5 py-0.5 rounded">
-                          価格未定義
+                          {t.models.unknownBadge}
                         </span>
                       )}
                     </td>
@@ -231,7 +215,7 @@ export default function ModelAnalysisPage() {
               {knownModels.length > 1 && (
                 <tfoot>
                   <tr className="border-t-2 border-edge bg-panel-hover">
-                    <td className="py-3 px-4 text-ink font-semibold">合計</td>
+                    <td className="py-3 px-4 text-ink font-semibold">{t.models.total}</td>
                     <td className="py-3 px-4 text-right text-highlight font-semibold tabular-nums">
                       ${totalActualCost.toFixed(2)}
                     </td>
@@ -249,10 +233,9 @@ export default function ModelAnalysisPage() {
           </div>
         </div>
 
-        {/* Daily Model Trend */}
         <div className="bg-panel rounded-xl p-6 border border-edge lg:col-span-2">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            日次モデル使用トレンド
+            {t.models.trendChart}
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={trendData}>
@@ -311,16 +294,17 @@ function LoadingSkeleton() {
 }
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useLang();
   return (
     <div className="flex items-center justify-center h-64">
       <div className="bg-panel rounded-xl p-8 border border-highlight text-center max-w-md">
-        <p className="text-highlight font-medium mb-2">データの読み込みに失敗しました</p>
+        <p className="text-highlight font-medium mb-2">{t.common.loadError}</p>
         <p className="text-ink-secondary text-sm mb-4">{message}</p>
         <button
           onClick={onRetry}
           className="px-4 py-2 text-sm font-medium bg-panel-hover border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors"
         >
-          再試行
+          {t.common.retry}
         </button>
       </div>
     </div>

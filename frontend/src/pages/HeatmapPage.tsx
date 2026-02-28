@@ -2,20 +2,13 @@ import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { fetchHeatmap, type HeatmapData, type HeatmapCell } from "../api/client";
 import StatCard from "../components/StatCard";
 import { useTheme } from "../context/ThemeContext";
+import { useLang } from "../context/LanguageContext";
 import { cn } from "../lib/utils";
 
-const WEEKDAY_LABELS = ["月", "火", "水", "木", "金", "土", "日"];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 type Metric = "cost" | "tokens";
 type Preset = "all" | "6months" | "lastMonth" | "thisMonth";
-
-const PRESETS: { key: Preset; label: string }[] = [
-  { key: "all", label: "全データ" },
-  { key: "6months", label: "過去6ヶ月" },
-  { key: "lastMonth", label: "先月" },
-  { key: "thisMonth", label: "今月" },
-];
 
 function toDateStr(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -34,7 +27,6 @@ function getPresetDates(preset: Preset): { start: string; end: string } | null {
     const end = new Date(today.getFullYear(), today.getMonth(), 0);
     return { start: toDateStr(start), end: toDateStr(end) };
   }
-  // thisMonth
   const start = new Date(today.getFullYear(), today.getMonth(), 1);
   return { start: toDateStr(start), end: toDateStr(today) };
 }
@@ -71,12 +63,21 @@ export default function HeatmapPage() {
   const [hoveredCell, setHoveredCell] = useState<HeatmapCell | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const { theme } = useTheme();
+  const { t } = useLang();
+
+  const PRESETS: { key: Preset; label: string }[] = [
+    { key: "all", label: t.heatmap.presetAll },
+    { key: "6months", label: t.heatmap.preset6months },
+    { key: "lastMonth", label: t.heatmap.presetLastMonth },
+    { key: "thisMonth", label: t.heatmap.presetThisMonth },
+  ];
+
+  const WEEKDAY_LABELS = t.heatmap.weekdayLabels;
 
   const [preset, setPreset] = useState<Preset>("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // プリセットボタン押下時
   const handlePresetClick = useCallback((p: Preset) => {
     setPreset(p);
     const dates = getPresetDates(p);
@@ -84,18 +85,16 @@ export default function HeatmapPage() {
     setEndDate(dates?.end ?? "");
   }, []);
 
-  // 日付入力を手動変更時はプリセットのハイライトを外す
   const handleStartChange = useCallback((v: string) => {
     setStartDate(v);
     setPreset("all");
-    if (v) setPreset("all"); // clear highlight; "all" only if both empty
+    if (v) setPreset("all");
   }, []);
   const handleEndChange = useCallback((v: string) => {
     setEndDate(v);
     setPreset("all");
   }, []);
 
-  // 日付変更ごとに自動fetch（初回含む）
   const isInitial = useRef(true);
   const hasData = useRef(false);
   const load = useCallback(() => {
@@ -121,14 +120,11 @@ export default function HeatmapPage() {
     load();
   }, [load]);
 
-  // 手動日付変更時のプリセット自動検出
-  // (プリセット押下以外の日付変更ではハイライトを外す)
   useEffect(() => {
     if (isInitial.current) {
       isInitial.current = false;
       return;
     }
-    // startDate/endDateがどのプリセットにも一致しなければハイライトなし
     for (const p of PRESETS) {
       const dates = getPresetDates(p.key);
       if (dates === null && startDate === "" && endDate === "") {
@@ -140,9 +136,9 @@ export default function HeatmapPage() {
         return;
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startDate, endDate]);
 
-  // セルデータをマップに変換
   const cellMap = useMemo(() => {
     if (!data) return new Map<string, HeatmapCell>();
     const map = new Map<string, HeatmapCell>();
@@ -152,7 +148,6 @@ export default function HeatmapPage() {
     return map;
   }, [data]);
 
-  // 最大値を算出（グラデーション用）
   const maxValue = useMemo(() => {
     if (!data || data.cells.length === 0) return 1;
     return Math.max(
@@ -161,7 +156,6 @@ export default function HeatmapPage() {
     );
   }, [data, metric]);
 
-  // サマリー統計
   const summary = useMemo(() => {
     if (!data || data.cells.length === 0) return null;
 
@@ -196,7 +190,6 @@ export default function HeatmapPage() {
     return { peakWeekday, peakHour, peakCell };
   }, [data]);
 
-  // テキスト色を背景の濃さに応じて切り替え
   const getCellTextColor = useCallback(
     (value: number): string => {
       const ratio = Math.pow(value / maxValue, 0.5);
@@ -209,7 +202,6 @@ export default function HeatmapPage() {
     [theme, maxValue],
   );
 
-  // グラデーション色を算出
   const getCellColor = useCallback(
     (value: number): string => {
       if (value === 0) {
@@ -240,16 +232,14 @@ export default function HeatmapPage() {
 
   return (
     <div className="space-y-6">
-      {/* ヘッダー */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-ink text-balance">ヒートマップ</h2>
+          <h2 className="text-2xl font-bold text-ink text-balance">{t.heatmap.title}</h2>
           <p className="text-xs text-ink-muted mt-0.5">
-            集計TZ: {data.timezone} / 時間帯×曜日別トークン消費
+            {t.common.aggregationTz}: {data.timezone} / {t.heatmap.subtitle}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* メトリクス切替 */}
           <div className="flex items-center bg-panel border border-edge rounded-lg p-0.5">
             <button
               onClick={() => setMetric("cost")}
@@ -260,7 +250,7 @@ export default function HeatmapPage() {
                   : "text-ink-secondary hover:text-ink",
               )}
             >
-              コスト
+              {t.heatmap.metricCost}
             </button>
             <button
               onClick={() => setMetric("tokens")}
@@ -271,14 +261,13 @@ export default function HeatmapPage() {
                   : "text-ink-secondary hover:text-ink",
               )}
             >
-              トークン
+              {t.heatmap.metricTokens}
             </button>
           </div>
-          {/* 更新ボタン */}
           <button
             onClick={load}
             disabled={loading || refetching}
-            title="データを再読み込み"
+            title={t.common.refreshTitle}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-panel border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg
@@ -294,14 +283,12 @@ export default function HeatmapPage() {
                 d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
               />
             </svg>
-            更新
+            {t.common.refresh}
           </button>
         </div>
       </div>
 
-      {/* 期間フィルター */}
       <div className="flex items-center flex-wrap gap-3">
-        {/* プリセットボタングループ */}
         <div className="flex items-center bg-panel border border-edge rounded-lg p-0.5">
           {PRESETS.map((p) => (
             <button
@@ -318,7 +305,6 @@ export default function HeatmapPage() {
             </button>
           ))}
         </div>
-        {/* 日付入力 */}
         <div className="flex items-center gap-1.5 text-sm">
           <input
             type="date"
@@ -326,7 +312,7 @@ export default function HeatmapPage() {
             onChange={(e) => handleStartChange(e.target.value)}
             className="px-2 py-1.5 bg-panel border border-edge rounded-lg text-ink text-sm tabular-nums focus:outline-none focus:border-accent transition-colors"
           />
-          <span className="text-ink-muted">〜</span>
+          <span className="text-ink-muted">{t.common.to}</span>
           <input
             type="date"
             value={endDate}
@@ -336,29 +322,27 @@ export default function HeatmapPage() {
         </div>
       </div>
 
-      {/* サマリー StatCards */}
       {summary && (
         <div className={cn("grid grid-cols-1 sm:grid-cols-3 gap-4 transition-opacity duration-200", refetching && "opacity-50")}>
           <StatCard
-            title="ピーク曜日"
-            value={WEEKDAY_LABELS[summary.peakWeekday - 1] + "曜日"}
+            title={t.heatmap.peakWeekday}
+            value={WEEKDAY_LABELS[summary.peakWeekday - 1] + t.heatmap.weekdaySuffix}
             color="accent"
           />
           <StatCard
-            title="ピーク時間帯"
-            value={`${summary.peakHour}:00〜${summary.peakHour + 1}:00`}
+            title={t.heatmap.peakHour}
+            value={`${summary.peakHour}:00${t.common.to}${summary.peakHour + 1}:00`}
             color="accent"
           />
           <StatCard
-            title="最高消費セル"
+            title={t.heatmap.peakCell}
             value={formatCost(summary.peakCell.cost)}
-            subtitle={`${WEEKDAY_LABELS[summary.peakCell.weekday - 1]}曜 ${summary.peakCell.hour}:00`}
+            subtitle={`${WEEKDAY_LABELS[summary.peakCell.weekday - 1]}${t.heatmap.weekdaySuffix} ${summary.peakCell.hour}:00`}
             color="highlight"
           />
         </div>
       )}
 
-      {/* ヒートマップ Grid */}
       <div className={cn("bg-panel rounded-xl p-6 border border-edge transition-opacity duration-200", refetching && "opacity-50")}>
         <div className="overflow-x-auto">
           <div
@@ -368,7 +352,6 @@ export default function HeatmapPage() {
               gridTemplateRows: `28px repeat(24, minmax(28px, 1fr))`,
             }}
           >
-            {/* ヘッダー行: 空セル + 曜日ラベル */}
             <div />
             {WEEKDAY_LABELS.map((label, i) => (
               <div
@@ -379,7 +362,6 @@ export default function HeatmapPage() {
               </div>
             ))}
 
-            {/* データ行: 時間ラベル + セル */}
             {HOURS.map((h) => (
               <>
                 <div
@@ -430,26 +412,21 @@ export default function HeatmapPage() {
           </div>
         </div>
 
-        {/* カラースケール凡例 */}
         <div className="flex items-center justify-between mt-4 px-12">
-          <span className="text-xs text-ink-muted">少ない</span>
+          <span className="text-xs text-ink-muted">{t.heatmap.low}</span>
           <div className="flex gap-0.5">
             {[0, 0.15, 0.3, 0.5, 0.7, 0.85, 1].map((ratio) => (
               <div
                 key={ratio}
                 className="w-6 h-3 rounded-sm"
-                style={{
-                  backgroundColor: getCellColor(ratio * maxValue),
-                }}
+                style={{ backgroundColor: getCellColor(ratio * maxValue) }}
               />
             ))}
           </div>
-          <span className="text-xs text-ink-muted">多い</span>
+          <span className="text-xs text-ink-muted">{t.heatmap.high}</span>
         </div>
-
       </div>
 
-      {/* ツールチップ（fixed配置でレイアウトに影響しない） */}
       {hoveredCell && (
         <div
           className="fixed z-50 px-3 py-2 bg-panel border border-edge rounded-lg shadow-lg text-sm pointer-events-none"
@@ -459,7 +436,7 @@ export default function HeatmapPage() {
           }}
         >
           <div className="text-ink font-medium">
-            {WEEKDAY_LABELS[hoveredCell.weekday - 1]}曜 {hoveredCell.hour}:00〜{hoveredCell.hour + 1}:00
+            {WEEKDAY_LABELS[hoveredCell.weekday - 1]}{t.heatmap.weekdaySuffix} {hoveredCell.hour}:00{t.common.to}{hoveredCell.hour + 1}:00
           </div>
           <div className="flex items-center gap-3 mt-0.5">
             <span className="text-accent tabular-nums font-medium">
@@ -495,16 +472,17 @@ function LoadingSkeleton() {
 }
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useLang();
   return (
     <div className="flex items-center justify-center h-64">
       <div className="bg-panel rounded-xl p-8 border border-highlight text-center max-w-md">
-        <p className="text-highlight font-medium mb-2">データの読み込みに失敗しました</p>
+        <p className="text-highlight font-medium mb-2">{t.common.loadError}</p>
         <p className="text-ink-secondary text-sm mb-4">{message}</p>
         <button
           onClick={onRetry}
           className="px-4 py-2 text-sm font-medium bg-panel-hover border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors"
         >
-          再試行
+          {t.common.retry}
         </button>
       </div>
     </div>

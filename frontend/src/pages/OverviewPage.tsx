@@ -13,6 +13,7 @@ import {
 import { fetchOverview, type OverviewData } from "../api/client";
 import StatCard from "../components/StatCard";
 import { useTheme } from "../context/ThemeContext";
+import { useLang } from "../context/LanguageContext";
 import { cn } from "../lib/utils";
 
 function formatNumber(n: number): string {
@@ -28,6 +29,7 @@ export default function OverviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { chart } = useTheme();
+  const { t } = useLang();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -62,16 +64,15 @@ export default function OverviewPage() {
 
   return (
     <div className="space-y-6">
-      {/* ヘッダー */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-ink text-balance">概要</h2>
-          <p className="text-xs text-ink-muted mt-0.5">今月の集計</p>
+          <h2 className="text-2xl font-bold text-ink text-balance">{t.overview.title}</h2>
+          <p className="text-xs text-ink-muted mt-0.5">{t.overview.subtitle}</p>
         </div>
         <button
           onClick={load}
           disabled={loading}
-          title="データを再読み込み"
+          title={t.common.refreshTitle}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-panel border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
@@ -87,77 +88,79 @@ export default function OverviewPage() {
               d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
             />
           </svg>
-          更新
+          {t.common.refresh}
         </button>
       </div>
 
-      {/* KPI カード */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="推定コスト合計"
+          title={t.overview.totalCost}
           value={formatCost(data.kpi.estimatedCost)}
-          subtitle={`日平均 ${formatCost(data.kpi.dailyAvgCost)}`}
+          subtitle={`${t.overview.dailyAvg} ${formatCost(data.kpi.dailyAvgCost)}`}
           color="highlight"
         />
         <StatCard
-          title="キャッシュヒット率"
+          title={t.overview.cacheHitRate}
           value={`${data.kpi.cacheHitRate}%`}
           color="accent"
         />
         <StatCard
-          title="セッション単価"
+          title={t.overview.costPerSession}
           value={formatCost(data.kpi.avgCostPerSession)}
-          subtitle={`${formatNumber(data.kpi.totalSessions)} セッション`}
+          subtitle={`${formatNumber(data.kpi.totalSessions)} ${t.overview.sessions}`}
           color="highlight"
         />
         <StatCard
-          title="キャッシュ節約額"
+          title={t.overview.cacheSavings}
           value={formatCost(data.kpi.cacheSavings)}
-          subtitle={`節約率 ${savingsRate}%`}
+          subtitle={`${t.overview.savingsRate} ${savingsRate}%`}
           color="accent"
         />
       </div>
 
-      {/* メタ情報（折りたたみ可能） */}
       <details className="group">
         <summary className="text-xs text-ink-muted cursor-pointer hover:text-ink-secondary transition-colors list-none flex items-center gap-1">
           <svg className="size-3 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
           </svg>
-          データソース詳細
+          {t.overview.dataSource}
         </summary>
         <div className="mt-2 pl-4 space-y-1">
+          <p className="text-xs text-ink-muted">{t.overview.notePrice}</p>
           <p className="text-xs text-ink-muted">
-            * コスト表示はAPI公開価格に基づく参考値です。Maxプラン等のサブスクリプション利用時の実際の請求額とは異なります。
+            {t.overview.noteTzTemplate
+              .replace("{tz}", data.coverage.timezone)
+              .replace("{date}", data.coverage.statsLastComputedDate || t.overview.statsLastDateUnknown)
+              .replace("{mode}", data.coverage.liveDataMode)}
           </p>
           <p className="text-xs text-ink-muted">
-            * 集計TZ: {data.coverage.timezone} / stats-cache最終日: {data.coverage.statsLastComputedDate || "不明"} / live読み込み: {data.coverage.liveDataMode}
-          </p>
-          <p className="text-xs text-ink-muted">
-            * totals反映: sessions={data.coverage.totalSessionsIncludesLive ? "stats+live" : "stats優先"}
+            {t.overview.noteTotalsTemplate.replace(
+              "{sessions}",
+              data.coverage.totalSessionsIncludesLive
+                ? t.overview.statsPlusLive
+                : t.overview.statsPreferred,
+            )}
           </p>
           {data.kpi.unknownModelCount > 0 && (
             <p className="text-xs text-highlight">
-              * 価格未定義モデル {data.kpi.unknownModelCount} 件 ({formatNumber(data.kpi.unknownModelTokens)} tokens) はコスト推定に含まれていません。
+              {t.overview.noteUnknownTemplate
+                .replace("{count}", String(data.kpi.unknownModelCount))
+                .replace("{tokens}", formatNumber(data.kpi.unknownModelTokens))}
             </p>
           )}
         </div>
       </details>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 日次コスト推移 */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            日次コスト推移
+            {t.overview.dailyCostChart}
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={dailyCostData}>
               <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} />
               <XAxis dataKey="date" tick={chart.axisTick} />
-              <YAxis
-                tick={chart.axisTick}
-                tickFormatter={(v) => `$${v}`}
-              />
+              <YAxis tick={chart.axisTick} tickFormatter={(v) => `$${v}`} />
               <Tooltip
                 contentStyle={chart.tooltipStyle}
                 labelStyle={chart.labelStyle}
@@ -166,7 +169,7 @@ export default function OverviewPage() {
               <Area
                 type="monotone"
                 dataKey="cost"
-                name="コスト"
+                name={t.overview.costLabel}
                 stroke={chart.accent}
                 fill={chart.accent}
                 fillOpacity={0.2}
@@ -176,60 +179,47 @@ export default function OverviewPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* モデル別コスト (横棒グラフ) */}
         <div className="bg-panel rounded-xl p-6 border border-edge">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            モデル別コスト
+            {t.overview.modelCostChart}
           </h3>
           {modelBarData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={modelBarData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} />
-                <XAxis
-                  type="number"
-                  tick={chart.axisTick}
-                  tickFormatter={(v) => `$${v}`}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="model"
-                  tick={chart.axisTick}
-                  width={120}
-                />
+                <XAxis type="number" tick={chart.axisTick} tickFormatter={(v) => `$${v}`} />
+                <YAxis type="category" dataKey="model" tick={chart.axisTick} width={120} />
                 <Tooltip
                   contentStyle={chart.tooltipStyle}
                   formatter={(value: number) => formatCost(value)}
                 />
-                <Bar dataKey="cost" name="コスト" radius={[0, 4, 4, 0]} fill={chart.accent} />
+                <Bar dataKey="cost" name={t.overview.costLabel} radius={[0, 4, 4, 0]} fill={chart.accent} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-[300px] text-ink-muted text-sm">
-              コストデータがありません
+              {t.overview.noCostData}
             </div>
           )}
         </div>
 
-        {/* サマリー情報パネル */}
         <div className="bg-panel rounded-xl p-6 border border-edge lg:col-span-2">
           <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-            クイックファクト
+            {t.overview.quickFacts}
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             <div>
-              <p className="text-ink-muted text-xs font-medium">セッション数</p>
+              <p className="text-ink-muted text-xs font-medium">{t.overview.sessionCount}</p>
               <p className="text-2xl font-bold text-ink mt-1 tabular-nums">
                 {formatNumber(data.kpi.totalSessions)}
               </p>
             </div>
             <div>
-              <p className="text-ink-muted text-xs font-medium">アクティブ日数</p>
-              <p className="text-2xl font-bold text-ink mt-1 tabular-nums">
-                {activeDays}
-              </p>
+              <p className="text-ink-muted text-xs font-medium">{t.overview.activeDays}</p>
+              <p className="text-2xl font-bold text-ink mt-1 tabular-nums">{activeDays}</p>
             </div>
             <div>
-              <p className="text-ink-muted text-xs font-medium">最高コストモデル</p>
+              <p className="text-ink-muted text-xs font-medium">{t.overview.topModel}</p>
               {data.topModel ? (
                 <>
                   <p className="text-2xl font-bold text-ink mt-1">{data.topModel.name}</p>
@@ -277,16 +267,17 @@ function LoadingSkeleton() {
 }
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useLang();
   return (
     <div className="flex items-center justify-center h-64">
       <div className="bg-panel rounded-xl p-8 border border-highlight text-center max-w-md">
-        <p className="text-highlight font-medium mb-2">データの読み込みに失敗しました</p>
+        <p className="text-highlight font-medium mb-2">{t.common.loadError}</p>
         <p className="text-ink-secondary text-sm mb-4">{message}</p>
         <button
           onClick={onRetry}
           className="px-4 py-2 text-sm font-medium bg-panel-hover border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors"
         >
-          再試行
+          {t.common.retry}
         </button>
       </div>
     </div>
