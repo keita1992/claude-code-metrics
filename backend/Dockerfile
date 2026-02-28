@@ -1,0 +1,12 @@
+FROM python:3.13-slim-bookworm
+
+WORKDIR /app
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+COPY pyproject.toml .
+RUN uv sync --no-dev --frozen 2>/dev/null || uv sync --no-dev
+
+COPY . .
+
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

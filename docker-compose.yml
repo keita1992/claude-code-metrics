@@ -1,0 +1,24 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "127.0.0.1:8099:8000"
+    volumes:
+      - ${CLAUDE_HOST_DIR:?CLAUDE_HOST_DIR is required}:/data/claude:ro
+      - ./backend:/app
+    environment:
+      - CLAUDE_DATA_DIR=/data/claude
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:3099:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - API_TARGET=http://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
