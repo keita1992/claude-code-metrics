@@ -16,9 +16,8 @@ import {
 } from "recharts";
 import { fetchInsights, type InsightsData } from "../api/client";
 import StatCard from "../components/StatCard";
+import { useTheme } from "../context/ThemeContext";
 import { cn } from "../lib/utils";
-
-const CHART_COLORS = ["#8b5cf6", "#10b981", "#f59e0b", "#0ea5e9", "#f43f5e", "#a78bfa", "#34d399", "#fbbf24"];
 
 function formatCost(n: number): string {
   return `$${n.toFixed(2)}`;
@@ -28,6 +27,7 @@ export default function InsightsPage() {
   const [data, setData] = useState<InsightsData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { chart } = useTheme();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -60,8 +60,8 @@ export default function InsightsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-balance">Insights</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h2 className="text-2xl font-bold text-ink text-balance">Insights</h2>
+          <p className="text-xs text-ink-muted mt-0.5">
             集計TZ: {data.timezone} / プロジェクト集中度は live データ基準
           </p>
         </div>
@@ -69,7 +69,7 @@ export default function InsightsPage() {
           onClick={load}
           disabled={loading}
           title="データを再読み込み"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-gray-200 hover:border-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-panel border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg
             className={cn("size-4", loading && "motion-safe:animate-spin")}
@@ -93,38 +93,38 @@ export default function InsightsPage() {
         <StatCard
           title="Overall Cache Hit Rate"
           value={`${(data.cacheEfficiency.overallRate * 100).toFixed(1)}%`}
-          color="emerald"
+          color="accent"
         />
         <StatCard
           title="Total Cache Savings"
           value={formatCost(data.cacheEfficiency.totalSavings)}
-          color="emerald"
+          color="accent"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cache Efficiency by Model */}
-        <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-          <h3 className="text-sm font-medium text-gray-400 mb-4 text-balance">
+        <div className="bg-panel rounded-xl p-6 border border-edge">
+          <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
             Cache Efficiency by Model
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium">Model</th>
-                  <th className="text-right py-3 px-4 text-gray-400 font-medium">Hit Rate</th>
-                  <th className="text-right py-3 px-4 text-gray-400 font-medium">Savings</th>
+                <tr className="border-b border-edge">
+                  <th className="text-left py-3 px-4 text-ink-secondary font-medium">Model</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">Hit Rate</th>
+                  <th className="text-right py-3 px-4 text-ink-secondary font-medium">Savings</th>
                 </tr>
               </thead>
               <tbody>
                 {data.cacheEfficiency.byModel.map((m) => (
-                  <tr key={m.model} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                    <td className="py-3 px-4 text-gray-200 font-medium">{m.model}</td>
-                    <td className="py-3 px-4 text-right text-violet-400 tabular-nums">
+                  <tr key={m.model} className="border-b border-edge-subtle hover:bg-panel-hover">
+                    <td className="py-3 px-4 text-ink font-medium">{m.model}</td>
+                    <td className="py-3 px-4 text-right text-accent tabular-nums">
                       {(m.rate * 100).toFixed(1)}%
                     </td>
-                    <td className="py-3 px-4 text-right text-emerald-400 tabular-nums">
+                    <td className="py-3 px-4 text-right text-accent tabular-nums">
                       {formatCost(m.savings)}
                     </td>
                   </tr>
@@ -135,8 +135,8 @@ export default function InsightsPage() {
         </div>
 
         {/* Downgrade Suggestions */}
-        <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-          <h3 className="text-sm font-medium text-gray-400 mb-4 text-balance">
+        <div className="bg-panel rounded-xl p-6 border border-edge">
+          <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
             Optimization Suggestions
           </h3>
           {data.downgradeSuggestions.length > 0 ? (
@@ -144,10 +144,10 @@ export default function InsightsPage() {
               {data.downgradeSuggestions.map((s, i) => (
                 <div
                   key={i}
-                  className="bg-gray-800/50 rounded-lg p-4 border border-gray-700"
+                  className="bg-panel-hover rounded-lg p-4 border border-edge"
                 >
-                  <p className="text-gray-200 text-sm">{s.description}</p>
-                  <p className="text-emerald-400 text-sm font-medium mt-2">
+                  <p className="text-ink text-sm">{s.description}</p>
+                  <p className="text-accent text-sm font-medium mt-2">
                     節約見込み: {formatCost(s.potentialSavings)}
                   </p>
                 </div>
@@ -155,67 +155,59 @@ export default function InsightsPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-40 text-center">
-              <div className="size-10 rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
-                <svg className="size-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="size-10 rounded-full bg-accent-subtle flex items-center justify-center mb-3">
+                <svg className="size-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
               </div>
-              <p className="text-gray-400 text-sm font-medium">最適化済み</p>
-              <p className="text-gray-500 text-xs mt-1">現在の利用パターンに改善提案はありません</p>
+              <p className="text-ink-secondary text-sm font-medium">最適化済み</p>
+              <p className="text-ink-muted text-xs mt-1">現在の利用パターンに改善提案はありません</p>
             </div>
           )}
         </div>
 
         {/* Peak Hours */}
-        <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-          <h3 className="text-sm font-medium text-gray-400 mb-4 text-balance">
+        <div className="bg-panel rounded-xl p-6 border border-edge">
+          <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
             Peak Usage Hours ({data.timezone})
           </h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={peakData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="label" tick={{ fill: "#9ca3af", fontSize: 12 }} />
-              <YAxis tick={{ fill: "#9ca3af", fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} />
+              <XAxis dataKey="label" tick={chart.axisTick} />
+              <YAxis tick={chart.axisTick} />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1f2937",
-                  border: "1px solid #374151",
-                  borderRadius: "8px",
-                }}
-                labelStyle={{ color: "#e5e7eb" }}
+                contentStyle={chart.tooltipStyle}
+                labelStyle={chart.labelStyle}
               />
-              <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="count" fill={chart.accent} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Weekly Cost Trend */}
-        <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-          <h3 className="text-sm font-medium text-gray-400 mb-4 text-balance">
+        <div className="bg-panel rounded-xl p-6 border border-edge">
+          <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
             Weekly Cost Trend
           </h3>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={weeklyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="weekLabel" tick={{ fill: "#9ca3af", fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} />
+              <XAxis dataKey="weekLabel" tick={chart.axisTick} />
               <YAxis
-                tick={{ fill: "#9ca3af", fontSize: 12 }}
+                tick={chart.axisTick}
                 tickFormatter={(v) => `$${v}`}
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1f2937",
-                  border: "1px solid #374151",
-                  borderRadius: "8px",
-                }}
-                labelStyle={{ color: "#e5e7eb" }}
+                contentStyle={chart.tooltipStyle}
+                labelStyle={chart.labelStyle}
                 formatter={(value: number) => formatCost(value)}
               />
               <Area
                 type="monotone"
                 dataKey="cost"
-                stroke="#f43f5e"
-                fill="#f43f5e"
+                stroke={chart.highlight}
+                fill={chart.highlight}
                 fillOpacity={0.2}
                 strokeWidth={2}
               />
@@ -224,11 +216,11 @@ export default function InsightsPage() {
         </div>
 
         {/* Project Concentration */}
-        <div className="bg-gray-900 rounded-xl p-6 border border-gray-800 lg:col-span-2">
-          <h3 className="text-sm font-medium text-gray-400 mb-1 text-balance">
+        <div className="bg-panel rounded-xl p-6 border border-edge lg:col-span-2">
+          <h3 className="text-sm font-medium text-ink-secondary mb-1 text-balance">
             Project Concentration
           </h3>
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-ink-muted mb-4">
             合計 {data.projectConcentration.totalProjects} プロジェクト
           </p>
           <ResponsiveContainer width="100%" height={300}>
@@ -242,20 +234,16 @@ export default function InsightsPage() {
                 outerRadius={85}
               >
                 {data.projectConcentration.topProjects.map((_, i) => (
-                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                  <Cell key={i} fill={chart.series[i % chart.series.length]} />
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1f2937",
-                  border: "1px solid #374151",
-                  borderRadius: "8px",
-                }}
+                contentStyle={chart.tooltipStyle}
                 formatter={(value: number) => `${value.toFixed(1)}%`}
               />
               <Legend
                 formatter={(value) => (
-                  <span style={{ color: "#d1d5db", fontSize: "12px" }}>{value}</span>
+                  <span style={{ color: chart.legendText, fontSize: "12px" }}>{value}</span>
                 )}
               />
             </PieChart>
@@ -269,12 +257,12 @@ export default function InsightsPage() {
 function LoadingSkeleton() {
   return (
     <div className="space-y-6 motion-safe:animate-pulse">
-      <div className="h-8 bg-gray-800 rounded w-36" />
+      <div className="h-8 bg-panel-alt rounded w-36" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {Array.from({ length: 2 }).map((_, i) => (
-          <div key={i} className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-            <div className="h-4 bg-gray-800 rounded w-24 mb-3" />
-            <div className="h-8 bg-gray-800 rounded w-32" />
+          <div key={i} className="bg-panel rounded-xl p-6 border border-edge">
+            <div className="h-4 bg-panel-alt rounded w-24 mb-3" />
+            <div className="h-8 bg-panel-alt rounded w-32" />
           </div>
         ))}
       </div>
@@ -282,10 +270,10 @@ function LoadingSkeleton() {
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className={`bg-gray-900 rounded-xl p-6 border border-gray-800 ${i === 4 ? "lg:col-span-2" : ""}`}
+            className={`bg-panel rounded-xl p-6 border border-edge ${i === 4 ? "lg:col-span-2" : ""}`}
           >
-            <div className="h-4 bg-gray-800 rounded w-40 mb-4" />
-            <div className="h-56 bg-gray-800 rounded" />
+            <div className="h-4 bg-panel-alt rounded w-40 mb-4" />
+            <div className="h-56 bg-panel-alt rounded" />
           </div>
         ))}
       </div>
@@ -296,12 +284,12 @@ function LoadingSkeleton() {
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="flex items-center justify-center h-64">
-      <div className="bg-gray-900 rounded-xl p-8 border border-rose-500/30 text-center max-w-md">
-        <p className="text-rose-400 font-medium mb-2">Failed to load data</p>
-        <p className="text-gray-400 text-sm mb-4">{message}</p>
+      <div className="bg-panel rounded-xl p-8 border border-highlight text-center max-w-md">
+        <p className="text-highlight font-medium mb-2">Failed to load data</p>
+        <p className="text-ink-secondary text-sm mb-4">{message}</p>
         <button
           onClick={onRetry}
-          className="px-4 py-2 text-sm font-medium bg-gray-800 border border-gray-700 rounded-lg text-gray-300 hover:text-gray-100 hover:border-violet-500 transition-colors"
+          className="px-4 py-2 text-sm font-medium bg-panel-hover border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors"
         >
           再試行
         </button>

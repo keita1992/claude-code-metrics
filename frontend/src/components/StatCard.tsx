@@ -10,19 +10,18 @@ interface StatCardProps {
   value: string | number;
   subtitle?: string;
   trend?: TrendInfo;
-  color?: string;
+  color?: "accent" | "highlight";
 }
 
 const COLOR_MAP: Record<string, string> = {
-  violet: "text-violet-500",
-  emerald: "text-emerald-500",
-  rose: "text-rose-500",
+  accent: "text-accent",
+  highlight: "text-highlight",
 };
 
 const TREND_COLOR_MAP: Record<TrendInfo["direction"], string> = {
-  positive: "text-emerald-400",
-  negative: "text-rose-400",
-  neutral: "text-gray-400",
+  positive: "text-accent",
+  negative: "text-highlight",
+  neutral: "text-ink-muted",
 };
 
 const TREND_ICON_MAP: Record<TrendInfo["direction"], string> = {
@@ -36,15 +35,15 @@ export default function StatCard({
   value,
   subtitle,
   trend,
-  color = "violet",
+  color = "highlight",
 }: StatCardProps) {
   return (
-    <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-      <p className="text-gray-400 text-sm font-medium text-balance">{title}</p>
-      <p className={cn("text-3xl font-bold mt-2 tabular-nums", COLOR_MAP[color] ?? "text-gray-100")}>
+    <div className="bg-panel rounded-xl p-6 border border-edge">
+      <p className="text-ink-secondary text-sm font-medium text-balance">{title}</p>
+      <p className={cn("text-3xl font-bold mt-2 tabular-nums", COLOR_MAP[color] ?? "text-ink")}>
         {value}
       </p>
-      {subtitle && <p className="text-gray-500 text-sm mt-1">{subtitle}</p>}
+      {subtitle && <p className="text-ink-muted text-sm mt-1">{subtitle}</p>}
       {trend && (
         <p className={cn("text-sm mt-1 font-medium tabular-nums", TREND_COLOR_MAP[trend.direction])}>
           {TREND_ICON_MAP[trend.direction]} {trend.value}

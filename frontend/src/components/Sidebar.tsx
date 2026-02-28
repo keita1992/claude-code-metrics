@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { cn } from "../lib/utils";
+import ThemeToggle from "./ThemeToggle";
 
 const NAV_ITEMS = [
   {
@@ -51,12 +52,12 @@ const NAV_ITEMS = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col shrink-0">
-      <div className="p-6 border-b border-gray-800">
-        <h1 className="text-lg font-bold text-gray-100">
+    <aside className="w-64 bg-panel border-r border-edge flex flex-col shrink-0">
+      <div className="p-6 border-b border-edge">
+        <h1 className="text-lg font-bold text-ink">
           Claude Code
         </h1>
-        <p className="text-sm text-gray-400">Dashboard</p>
+        <p className="text-sm text-ink-muted">Dashboard</p>
       </div>
       <nav className="flex-1 p-3 space-y-1">
         {NAV_ITEMS.map((item) => (
@@ -68,8 +69,8 @@ export default function Sidebar() {
               cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-violet-500/15 text-violet-400"
-                  : "text-gray-400 hover:bg-gray-800 hover:text-gray-200",
+                  ? "bg-accent-subtle text-accent"
+                  : "text-ink-secondary hover:bg-panel-hover hover:text-ink",
               )
             }
           >
@@ -78,8 +79,9 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
-      <div className="p-4 border-t border-gray-800">
-        <p className="text-xs text-gray-500">v0.1.0</p>
+      <div className="p-3 border-t border-edge space-y-1">
+        <ThemeToggle />
+        <p className="text-xs text-ink-muted px-3 py-1">v0.1.0</p>
       </div>
     </aside>
   );

@@ -13,6 +13,7 @@ import {
   Legend,
 } from "recharts";
 import { fetchDaily, type DailyData } from "../api/client";
+import { useTheme } from "../context/ThemeContext";
 import { cn } from "../lib/utils";
 
 const DEFAULT_TIMEZONE = "Asia/Tokyo";
@@ -41,6 +42,7 @@ export default function DailyTrendsPage() {
   const [startDate, setStartDate] = useState(() => formatDateInTZ(30, DEFAULT_TIMEZONE));
   const [endDate, setEndDate] = useState(() => formatDateInTZ(0, DEFAULT_TIMEZONE));
   const [mode, setMode] = useState<"daily" | "weekly">("daily");
+  const { chart } = useTheme();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -68,7 +70,6 @@ export default function DailyTrendsPage() {
     date: mode === "weekly" ? d.date : d.date.slice(5),
   }));
 
-  // 期間サマリー計算
   const summary = data
     ? data.daily.reduce(
         (acc, d) => ({
@@ -96,21 +97,21 @@ export default function DailyTrendsPage() {
       {/* ヘッダー */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-balance">
+          <h2 className="text-2xl font-bold text-ink text-balance">
             {mode === "daily" ? "Daily" : "Weekly"} Trends
           </h2>
-          <p className="text-xs text-gray-500 mt-0.5">TZ: {tz}</p>
+          <p className="text-xs text-ink-muted mt-0.5">TZ: {tz}</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           {/* モード切替 */}
-          <div className="flex bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+          <div className="flex bg-panel-hover rounded-lg border border-edge overflow-hidden">
             <button
               onClick={() => setMode("daily")}
               className={cn(
                 "px-3 py-1.5 text-sm font-medium transition-colors",
                 mode === "daily"
-                  ? "bg-violet-600 text-white"
-                  : "text-gray-400 hover:text-gray-200",
+                  ? "bg-accent text-white"
+                  : "text-ink-secondary hover:text-ink",
               )}
             >
               Daily
@@ -120,8 +121,8 @@ export default function DailyTrendsPage() {
               className={cn(
                 "px-3 py-1.5 text-sm font-medium transition-colors",
                 mode === "weekly"
-                  ? "bg-violet-600 text-white"
-                  : "text-gray-400 hover:text-gray-200",
+                  ? "bg-accent text-white"
+                  : "text-ink-secondary hover:text-ink",
               )}
             >
               Weekly
@@ -135,7 +136,7 @@ export default function DailyTrendsPage() {
                 <button
                   key={p.days}
                   onClick={() => applyPreset(p.days)}
-                  className="px-2.5 py-1.5 text-xs font-medium bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-gray-200 hover:border-violet-500 transition-colors"
+                  className="px-2.5 py-1.5 text-xs font-medium bg-panel border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors"
                 >
                   {p.label}
                 </button>
@@ -150,14 +151,14 @@ export default function DailyTrendsPage() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-violet-500"
+                className="bg-panel border border-edge rounded-lg px-3 py-1.5 text-sm text-ink focus:outline-none focus:border-accent"
               />
-              <span className="text-gray-500 text-sm">〜</span>
+              <span className="text-ink-muted text-sm">〜</span>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-violet-500"
+                className="bg-panel border border-edge rounded-lg px-3 py-1.5 text-sm text-ink focus:outline-none focus:border-accent"
               />
             </div>
           )}
@@ -167,7 +168,7 @@ export default function DailyTrendsPage() {
             onClick={load}
             disabled={loading}
             title="データを再読み込み"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-gray-200 hover:border-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-panel border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg
               className={cn("size-4", loading && "motion-safe:animate-spin")}
@@ -190,32 +191,32 @@ export default function DailyTrendsPage() {
       {/* 期間サマリー */}
       {summary && !loading && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-            <p className="text-gray-400 text-xs font-medium">期間合計コスト</p>
-            <p className="text-xl font-bold text-rose-400 mt-1 tabular-nums">
+          <div className="bg-panel rounded-xl p-4 border border-edge">
+            <p className="text-ink-secondary text-xs font-medium">期間合計コスト</p>
+            <p className="text-xl font-bold text-highlight mt-1 tabular-nums">
               ${summary.totalCost.toFixed(2)}
             </p>
             {avgDailyCost !== null && (
-              <p className="text-gray-500 text-xs mt-0.5">
+              <p className="text-ink-muted text-xs mt-0.5">
                 日均 ${avgDailyCost.toFixed(2)}
               </p>
             )}
           </div>
-          <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-            <p className="text-gray-400 text-xs font-medium">期間セッション数</p>
-            <p className="text-xl font-bold text-violet-400 mt-1 tabular-nums">
+          <div className="bg-panel rounded-xl p-4 border border-edge">
+            <p className="text-ink-secondary text-xs font-medium">期間セッション数</p>
+            <p className="text-xl font-bold text-accent mt-1 tabular-nums">
               {summary.totalSessions.toLocaleString()}
             </p>
           </div>
-          <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-            <p className="text-gray-400 text-xs font-medium">期間メッセージ数</p>
-            <p className="text-xl font-bold text-violet-400 mt-1 tabular-nums">
+          <div className="bg-panel rounded-xl p-4 border border-edge">
+            <p className="text-ink-secondary text-xs font-medium">期間メッセージ数</p>
+            <p className="text-xl font-bold text-accent mt-1 tabular-nums">
               {summary.totalMessages.toLocaleString()}
             </p>
           </div>
-          <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-            <p className="text-gray-400 text-xs font-medium">期間総トークン数</p>
-            <p className="text-xl font-bold text-violet-400 mt-1 tabular-nums">
+          <div className="bg-panel rounded-xl p-4 border border-edge">
+            <p className="text-ink-secondary text-xs font-medium">期間総トークン数</p>
+            <p className="text-xl font-bold text-accent mt-1 tabular-nums">
               {(summary.totalTokens / 1_000_000).toFixed(2)}M
             </p>
           </div>
@@ -228,104 +229,95 @@ export default function DailyTrendsPage() {
       {chartData && !loading && (
         <div className="grid grid-cols-1 gap-6">
           {/* Token Stacked Bar Chart */}
-          <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-            <h3 className="text-sm font-medium text-gray-400 mb-4 text-balance">
+          <div className="bg-panel rounded-xl p-6 border border-edge">
+            <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
               {mode === "daily" ? "Daily" : "Weekly"} Token Usage
             </h3>
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="date" tick={{ fill: "#9ca3af", fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} />
+                <XAxis dataKey="date" tick={chart.axisTick} />
                 <YAxis
-                  tick={{ fill: "#9ca3af", fontSize: 12 }}
+                  tick={chart.axisTick}
                   tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
                 />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1f2937",
-                    border: "1px solid #374151",
-                    borderRadius: "8px",
-                  }}
-                  labelStyle={{ color: "#e5e7eb" }}
+                  contentStyle={chart.tooltipStyle}
+                  labelStyle={chart.labelStyle}
                   formatter={(value: number) => value.toLocaleString()}
                 />
-                <Legend />
-                <Bar dataKey="inputTokens" name="Input" stackId="a" fill="#8b5cf6" />
-                <Bar dataKey="outputTokens" name="Output" stackId="a" fill="#10b981" />
-                <Bar dataKey="cacheReadTokens" name="Cache Read" stackId="a" fill="#f59e0b" />
-                <Bar
-                  dataKey="cacheCreationTokens"
-                  name="Cache Create"
-                  stackId="a"
-                  fill="#0ea5e9"
+                <Legend
+                  formatter={(value) => (
+                    <span style={{ color: chart.legendText, fontSize: "12px" }}>{value}</span>
+                  )}
                 />
+                <Bar dataKey="inputTokens" name="Input" stackId="a" fill={chart.series[0]} />
+                <Bar dataKey="outputTokens" name="Output" stackId="a" fill={chart.series[1]} />
+                <Bar dataKey="cacheReadTokens" name="Cache Read" stackId="a" fill={chart.series[2]} />
+                <Bar dataKey="cacheCreationTokens" name="Cache Create" stackId="a" fill={chart.series[3]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           {/* Daily Cost Line Chart */}
-          <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-            <h3 className="text-sm font-medium text-gray-400 mb-4 text-balance">
+          <div className="bg-panel rounded-xl p-6 border border-edge">
+            <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
               {mode === "daily" ? "Daily" : "Weekly"} Estimated Cost
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="date" tick={{ fill: "#9ca3af", fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} />
+                <XAxis dataKey="date" tick={chart.axisTick} />
                 <YAxis
-                  tick={{ fill: "#9ca3af", fontSize: 12 }}
+                  tick={chart.axisTick}
                   tickFormatter={(v) => `$${v.toFixed(2)}`}
                 />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1f2937",
-                    border: "1px solid #374151",
-                    borderRadius: "8px",
-                  }}
-                  labelStyle={{ color: "#e5e7eb" }}
+                  contentStyle={chart.tooltipStyle}
+                  labelStyle={chart.labelStyle}
                   formatter={(value: number) => `$${value.toFixed(2)}`}
                 />
                 <Line
                   type="monotone"
                   dataKey="estimatedCost"
                   name="Cost"
-                  stroke="#f43f5e"
+                  stroke={chart.highlight}
                   strokeWidth={2}
-                  dot={{ fill: "#f43f5e", r: 3 }}
+                  dot={{ fill: chart.highlight, r: 3 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
           {/* Sessions + Messages Composed Chart */}
-          <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-            <h3 className="text-sm font-medium text-gray-400 mb-4 text-balance">
+          <div className="bg-panel rounded-xl p-6 border border-edge">
+            <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
               Sessions & Messages
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <ComposedChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="date" tick={{ fill: "#9ca3af", fontSize: 12 }} />
-                <YAxis yAxisId="left" tick={{ fill: "#9ca3af", fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} />
+                <XAxis dataKey="date" tick={chart.axisTick} />
+                <YAxis yAxisId="left" tick={chart.axisTick} />
                 <YAxis
                   yAxisId="right"
                   orientation="right"
-                  tick={{ fill: "#9ca3af", fontSize: 12 }}
+                  tick={chart.axisTick}
                 />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1f2937",
-                    border: "1px solid #374151",
-                    borderRadius: "8px",
-                  }}
-                  labelStyle={{ color: "#e5e7eb" }}
+                  contentStyle={chart.tooltipStyle}
+                  labelStyle={chart.labelStyle}
                 />
-                <Legend />
+                <Legend
+                  formatter={(value) => (
+                    <span style={{ color: chart.legendText, fontSize: "12px" }}>{value}</span>
+                  )}
+                />
                 <Bar
                   yAxisId="left"
                   dataKey="sessionCount"
                   name="Sessions"
-                  fill="#8b5cf6"
+                  fill={chart.series[0]}
                   radius={[4, 4, 0, 0]}
                 />
                 <Line
@@ -333,9 +325,9 @@ export default function DailyTrendsPage() {
                   type="monotone"
                   dataKey="messageCount"
                   name="Messages"
-                  stroke="#10b981"
+                  stroke={chart.series[1]}
                   strokeWidth={2}
-                  dot={{ fill: "#10b981", r: 3 }}
+                  dot={{ fill: chart.series[1], r: 3 }}
                 />
               </ComposedChart>
             </ResponsiveContainer>
@@ -351,16 +343,16 @@ function LoadingSkeleton() {
     <div className="space-y-6 motion-safe:animate-pulse">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-            <div className="h-3 bg-gray-800 rounded w-20 mb-2" />
-            <div className="h-6 bg-gray-800 rounded w-24" />
+          <div key={i} className="bg-panel rounded-xl p-4 border border-edge">
+            <div className="h-3 bg-panel-alt rounded w-20 mb-2" />
+            <div className="h-6 bg-panel-alt rounded w-24" />
           </div>
         ))}
       </div>
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-          <div className="h-4 bg-gray-800 rounded w-40 mb-4" />
-          <div className="h-72 bg-gray-800 rounded" />
+        <div key={i} className="bg-panel rounded-xl p-6 border border-edge">
+          <div className="h-4 bg-panel-alt rounded w-40 mb-4" />
+          <div className="h-72 bg-panel-alt rounded" />
         </div>
       ))}
     </div>
@@ -370,12 +362,12 @@ function LoadingSkeleton() {
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="flex items-center justify-center h-64">
-      <div className="bg-gray-900 rounded-xl p-8 border border-rose-500/30 text-center max-w-md">
-        <p className="text-rose-400 font-medium mb-2">Failed to load data</p>
-        <p className="text-gray-400 text-sm mb-4">{message}</p>
+      <div className="bg-panel rounded-xl p-8 border border-highlight text-center max-w-md">
+        <p className="text-highlight font-medium mb-2">Failed to load data</p>
+        <p className="text-ink-secondary text-sm mb-4">{message}</p>
         <button
           onClick={onRetry}
-          className="px-4 py-2 text-sm font-medium bg-gray-800 border border-gray-700 rounded-lg text-gray-300 hover:text-gray-100 hover:border-violet-500 transition-colors"
+          className="px-4 py-2 text-sm font-medium bg-panel-hover border border-edge rounded-lg text-ink-secondary hover:text-ink hover:border-accent transition-colors"
         >
           再試行
         </button>

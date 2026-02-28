@@ -1,12 +1,68 @@
 @import "tailwindcss";
 
-html {
+@theme {
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-panel-alt: var(--panel-alt);
+  --color-panel-hover: var(--panel-hover);
+  --color-edge: var(--edge);
+  --color-edge-subtle: var(--edge-subtle);
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent: var(--accent);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-highlight: var(--highlight);
+  --color-highlight-subtle: var(--highlight-subtle);
+}
+
+/* Dark theme (default) */
+:root {
+  --canvas: #1c1a1e;
+  --panel: #2a272c;
+  --panel-alt: #232028;
+  --panel-hover: #363237;
+  --edge: #403c42;
+  --edge-subtle: #363237;
+
+  --ink: #ede8e3;
+  --ink-secondary: #b0a8a0;
+  --ink-muted: #908680;
+
+  --accent: #5b84ad;
+  --accent-subtle: rgba(45, 66, 98, 0.25);
+  --highlight: #D09683;
+  --highlight-subtle: rgba(208, 150, 131, 0.18);
+
   color-scheme: dark;
 }
 
+/* Light theme */
+:root.light {
+  --canvas: #f5f0eb;
+  --panel: #ffffff;
+  --panel-alt: #ede5de;
+  --panel-hover: #ede5de;
+  --edge: #ddd3ca;
+  --edge-subtle: #e8e0d8;
+
+  --ink: #363237;
+  --ink-secondary: #73605B;
+  --ink-muted: #a09890;
+
+  --accent: #2D4262;
+  --accent-subtle: rgba(45, 66, 98, 0.1);
+  --highlight: #c0826f;
+  --highlight-subtle: rgba(192, 130, 111, 0.12);
+
+  color-scheme: light;
+}
+
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--canvas);
+  color: var(--ink);
+  transition: background-color 0.25s, color 0.25s;
 }
 
 ::-webkit-scrollbar {
@@ -19,10 +75,10 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #374151;
+  background: var(--edge);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
+  background: var(--ink-muted);
 }
