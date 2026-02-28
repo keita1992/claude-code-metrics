@@ -8,11 +8,22 @@ Claude Code のローカル利用データ（`~/.claude`）を可視化・分析
 
 ## 主な機能
 
-- **概要ダッシュボード** — セッション数・メッセージ数・推定コスト・キャッシュ節約額の KPI を一覧表示
+- **概要ダッシュボード** — セッション数・推定コスト・キャッシュ節約額の KPI を一覧表示
 - **日次/週次トレンド** — トークン使用量・コスト・セッション数の時系列推移を可視化
 - **モデル別分析** — モデルごとのトークン使用量・コスト・キャッシュヒット率を比較
 - **プロジェクト別統計** — プロジェクトごとの利用状況とツール使用頻度を集計
 - **最適化インサイト** — キャッシュ効率分析、モデルダウングレード提案、ピーク利用時間帯の特定
+
+## 対応環境
+
+| 項目 | 要件 |
+|------|------|
+| **OS** | macOS、Linux |
+| **Windows** | Windows Subsystem for Linux (WSL) 経由で動作可能 |
+| **Node.js** | 18 以上（Claude Code をインストール済みなら必ず存在します） |
+| **git** | 任意のバージョン |
+| **Python** | uv が自動インストール（Python 3.13） |
+| **データ** | `~/.claude` ディレクトリが存在すること（Claude Code の利用履歴） |
 
 ## クイックスタート
 
@@ -27,14 +38,6 @@ claude-code-metrics
 ```
 
 ブラウザが自動的に開き、ダッシュボードが表示されます。
-
-### 前提条件
-
-- Node.js（Claude Code をインストール済みであれば必ず存在します）
-- git
-- Claude Code の利用履歴（`~/.claude` ディレクトリが存在すること）
-
-> Python（uv 経由）はインストーラが自動セットアップします。
 
 ### コマンドオプション
 
@@ -68,11 +71,11 @@ claude-code-metrics/
 │   │   ├── projects.py        #   GET /api/projects
 │   │   └── insights.py        #   GET /api/insights
 │   ├── services/              # ビジネスロジック
-│   │   ├── aggregator.py      #   データ集約エンジン
+│   │   ├── aggregator.py      #   データ集約エンジン（TTLキャッシュ付き）
 │   │   ├── jsonl_parser.py    #   JSONL パーサー
 │   │   ├── cost_calculator.py #   コスト計算
 │   │   ├── insight_engine.py  #   インサイト生成
-│   │   └── stats_cache.py     #   キャッシュ管理
+│   │   └── stats_cache.py     #   stats-cache フォールバック読み込み
 │   └── pyproject.toml
 ├── frontend/
 │   ├── src/
@@ -114,21 +117,19 @@ FastAPI (:3099)
   ├── /api/*  → API ルーター（各種エンドポイント）
   └── /*      → frontend/dist/ 静的ファイル + SPA catch-all
                   │
-                  ├─ ~/.claude/stats-cache.json ← キャッシュ済み統計データ
-                  │
-                  └─ ~/.claude/projects/*/history.jsonl ← ライブデータ（差分取得）
+                  └─ ~/.claude/projects/**/*.jsonl ← セッションログ（直接パース）
                       │
                       ▼
-                  集約 → コスト計算 → インサイト生成 → JSON レスポンス
+                  集約（TTL 300秒）→ コスト計算 → インサイト生成 → JSON レスポンス
 ```
 
 **データフロー:**
 
-1. `stats-cache.json` から過去の集約済みデータを読み込み（300秒 TTL）
-2. `lastComputedDate` 以降の JSONL ファイルを差分パース
-3. 両者をマージし、重複排除・集約処理を実行
-4. コスト計算エンジンでモデル別の料金を算出
-5. インサイトエンジンで最適化提案を生成
+1. `~/.claude/projects/` 以下の JSONL ファイルをすべて読み込み・パース
+2. Polars でトークン使用量・モデル・日付・時間帯ごとに集約
+3. コスト計算エンジンでモデル別の料金を算出
+4. インサイトエンジンで最適化提案を生成
+5. 結果を 300 秒間メモリキャッシュし、再リクエスト時は高速返却
 
 ## 対応モデルと価格
 
