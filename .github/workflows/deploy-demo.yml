@@ -39,6 +39,9 @@ jobs:
         env:
           VITE_DEMO_MODE: "true"
 
+      - name: GitHub Pages SPA 用 404.html を生成
+        run: cp frontend/dist/index.html frontend/dist/404.html
+
       - uses: actions/configure-pages@v4
 
       - uses: actions/upload-pages-artifact@v3
