@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from routers import daily, insights, models, overview, projects
+from routers import daily, heatmap, insights, models, overview, projects
 
 # フロントエンドビルド成果物のディレクトリ
 # FRONTEND_DIR 環境変数で上書き可能（開発時に便利）
@@ -52,6 +52,7 @@ app.include_router(daily.router)
 app.include_router(models.router)
 app.include_router(projects.router)
 app.include_router(insights.router)
+app.include_router(heatmap.router)
 
 
 @app.get("/api/health")

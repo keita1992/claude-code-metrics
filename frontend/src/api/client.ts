@@ -100,6 +100,19 @@ export interface InsightsData {
   coverage: DataCoverage;
 }
 
+export interface HeatmapCell {
+  weekday: number; // 1=月...7=日 (ISO weekday)
+  hour: number;
+  tokens: number;
+  cost: number;
+}
+
+export interface HeatmapData {
+  cells: HeatmapCell[];
+  timezone: string;
+  coverage: DataCoverage;
+}
+
 // --- API Client ---
 
 async function fetchJSON<T>(url: string): Promise<T> {
@@ -133,4 +146,12 @@ export function fetchProjects(): Promise<ProjectsData> {
 
 export function fetchInsights(): Promise<InsightsData> {
   return fetchJSON<InsightsData>("/api/insights");
+}
+
+export function fetchHeatmap(start?: string, end?: string): Promise<HeatmapData> {
+  const params = new URLSearchParams();
+  if (start) params.set("start", start);
+  if (end) params.set("end", end);
+  const qs = params.toString();
+  return fetchJSON<HeatmapData>(`/api/heatmap${qs ? `?${qs}` : ""}`);
 }

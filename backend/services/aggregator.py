@@ -12,11 +12,12 @@ from services.stats_cache import load_stats_cache
 
 _agg_cache: dict | None = None
 _agg_cache_time: float = 0.0
+_deduped_live_df: pl.DataFrame | None = None
 
 
 def get_aggregated_data() -> dict:
     """JSONLデータを集約して返す (TTLキャッシュ付き)"""
-    global _agg_cache, _agg_cache_time
+    global _agg_cache, _agg_cache_time, _deduped_live_df
 
     now = time.monotonic()
     if _agg_cache is not None and (now - _agg_cache_time) < CACHE_TTL_SECONDS:
@@ -27,6 +28,7 @@ def get_aggregated_data() -> dict:
     first_session_date = stats.get("firstSessionDate", "")
 
     live_df = parse_jsonl_files(since_date=None)
+    _deduped_live_df = _deduplicate_live_assistant_rows(live_df)
     result = _aggregate_live_data(
         live_df=live_df,
         last_computed=last_computed,
@@ -95,6 +97,7 @@ def _aggregate_live_data(live_df: pl.DataFrame, last_computed: str, first_sessio
             "hourCounts": {},
             "projects": {},
             "dailyDetail": {},
+            "weekdayHourModelTokens": {},
             "sessionModels": [],
             "sessionIdsByDate": {},
             "sessionDateBounds": {},
@@ -303,6 +306,32 @@ def _aggregate_live_data(live_df: pl.DataFrame, last_computed: str, first_sessio
         valid_session_ids=valid_session_ids,
     )
 
+    # 曜日×時間帯×モデル別トークン集計（ヒートマップ用）
+    weekday_hour_model_tokens: dict[str, dict[str, dict[str, int]]] = {}
+    if assistant_df.height > 0:
+        whm_df = (
+            assistant_df
+            .with_columns(pl.col("date").str.to_date().dt.weekday().alias("weekday"))
+            .group_by("weekday", "hour", "model")
+            .agg(
+                pl.col("input_tokens").sum().alias("inputTokens"),
+                pl.col("output_tokens").sum().alias("outputTokens"),
+                pl.col("cache_read_tokens").sum().alias("cacheReadTokens"),
+                pl.col("cache_creation_tokens").sum().alias("cacheCreationTokens"),
+            )
+        )
+        for row in whm_df.iter_rows(named=True):
+            key = f"{row['weekday']}:{row['hour']}"
+            model_id = row["model"]
+            if not model_id:
+                continue
+            weekday_hour_model_tokens.setdefault(key, {})[model_id] = {
+                "inputTokens": row["inputTokens"],
+                "outputTokens": row["outputTokens"],
+                "cacheReadTokens": row["cacheReadTokens"],
+                "cacheCreationTokens": row["cacheCreationTokens"],
+            }
+
     # ダウングレード分析用
     session_models: list[dict] = []
     if assistant_df.height > 0:
@@ -333,6 +362,7 @@ def _aggregate_live_data(live_df: pl.DataFrame, last_computed: str, first_sessio
         "hourCounts": hour_counts,
         "projects": projects,
         "dailyDetail": daily_detail,
+        "weekdayHourModelTokens": weekday_hour_model_tokens,
         "sessionModels": session_models,
         "sessionIdsByDate": session_ids_by_date,
         "sessionDateBounds": session_date_bounds,
@@ -462,6 +492,53 @@ def _build_projects(
     return projects
 
 
+def get_filtered_weekday_hour_tokens(
+    start: str | None = None, end: str | None = None,
+) -> dict[str, dict[str, dict[str, int]]]:
+    """日付フィルタ付き曜日×時間帯×モデル別トークン集計"""
+    get_aggregated_data()  # キャッシュ確保
+
+    if _deduped_live_df is None or _deduped_live_df.height == 0:
+        return {}
+
+    assistant_df = _deduped_live_df.filter(
+        (pl.col("type") == "assistant") & (pl.col("model") != "")
+    )
+    if start:
+        assistant_df = assistant_df.filter(pl.col("date") >= start)
+    if end:
+        assistant_df = assistant_df.filter(pl.col("date") <= end)
+
+    if assistant_df.height == 0:
+        return {}
+
+    whm_df = (
+        assistant_df
+        .with_columns(pl.col("date").str.to_date().dt.weekday().alias("weekday"))
+        .group_by("weekday", "hour", "model")
+        .agg(
+            pl.col("input_tokens").sum().alias("inputTokens"),
+            pl.col("output_tokens").sum().alias("outputTokens"),
+            pl.col("cache_read_tokens").sum().alias("cacheReadTokens"),
+            pl.col("cache_creation_tokens").sum().alias("cacheCreationTokens"),
+        )
+    )
+
+    result: dict[str, dict[str, dict[str, int]]] = {}
+    for row in whm_df.iter_rows(named=True):
+        key = f"{row['weekday']}:{row['hour']}"
+        model_id = row["model"]
+        if not model_id:
+            continue
+        result.setdefault(key, {})[model_id] = {
+            "inputTokens": row["inputTokens"],
+            "outputTokens": row["outputTokens"],
+            "cacheReadTokens": row["cacheReadTokens"],
+            "cacheCreationTokens": row["cacheCreationTokens"],
+        }
+    return result
+
+
 def _fallback_from_stats(stats: dict, last_computed: str) -> dict:
     daily_activity = list(stats.get("dailyActivity") or [])
     daily_model_tokens = list(stats.get("dailyModelTokens") or [])
@@ -491,6 +568,7 @@ def _fallback_from_stats(stats: dict, last_computed: str) -> dict:
         "hourCounts": dict(stats.get("hourCounts") or {}),
         "projects": {},
         "dailyDetail": daily_detail,
+        "weekdayHourModelTokens": {},
         "sessionModels": [],
         "sessionIdsByDate": {},
         "sessionDateBounds": {},
