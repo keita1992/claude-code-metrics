@@ -134,7 +134,7 @@ export default function OverviewPage() {
             * 集計TZ: {data.coverage.timezone} / stats-cache最終日: {data.coverage.statsLastComputedDate || "不明"} / live読み込み: {data.coverage.liveDataMode}
           </p>
           <p className="text-xs text-ink-muted">
-            * totals反映: sessions={data.coverage.totalSessionsIncludesLive ? "stats+live" : "stats優先"} / messages={data.coverage.totalMessagesIncludesLive ? "stats+live" : "stats優先"}
+            * totals反映: sessions={data.coverage.totalSessionsIncludesLive ? "stats+live" : "stats優先"}
           </p>
           {data.kpi.unknownModelCount > 0 && (
             <p className="text-xs text-highlight">
@@ -220,12 +220,6 @@ export default function OverviewPage() {
               <p className="text-ink-muted text-xs font-medium">セッション数</p>
               <p className="text-2xl font-bold text-ink mt-1 tabular-nums">
                 {formatNumber(data.kpi.totalSessions)}
-              </p>
-            </div>
-            <div>
-              <p className="text-ink-muted text-xs font-medium">メッセージ数</p>
-              <p className="text-2xl font-bold text-ink mt-1 tabular-nums">
-                {formatNumber(data.kpi.totalMessages)}
               </p>
             </div>
             <div>

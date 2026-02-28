@@ -4,7 +4,6 @@ import {
   Bar,
   LineChart,
   Line,
-  ComposedChart,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -75,7 +74,6 @@ export default function DailyTrendsPage() {
         (acc, d) => ({
           totalCost: acc.totalCost + d.estimatedCost,
           totalSessions: acc.totalSessions + d.sessionCount,
-          totalMessages: acc.totalMessages + d.messageCount,
           totalTokens:
             acc.totalTokens +
             d.inputTokens +
@@ -83,7 +81,7 @@ export default function DailyTrendsPage() {
             d.cacheReadTokens +
             d.cacheCreationTokens,
         }),
-        { totalCost: 0, totalSessions: 0, totalMessages: 0, totalTokens: 0 },
+        { totalCost: 0, totalSessions: 0, totalTokens: 0 },
       )
     : null;
 
@@ -209,12 +207,6 @@ export default function DailyTrendsPage() {
             </p>
           </div>
           <div className="bg-panel rounded-xl p-4 border border-edge">
-            <p className="text-ink-secondary text-xs font-medium">期間メッセージ数</p>
-            <p className="text-xl font-bold text-accent mt-1 tabular-nums">
-              {summary.totalMessages.toLocaleString()}
-            </p>
-          </div>
-          <div className="bg-panel rounded-xl p-4 border border-edge">
             <p className="text-ink-secondary text-xs font-medium">期間総トークン数</p>
             <p className="text-xl font-bold text-accent mt-1 tabular-nums">
               {(summary.totalTokens / 1_000_000).toFixed(2)}M
@@ -289,47 +281,27 @@ export default function DailyTrendsPage() {
             </ResponsiveContainer>
           </div>
 
-          {/* Sessions + Messages Composed Chart */}
+          {/* Sessions Chart */}
           <div className="bg-panel rounded-xl p-6 border border-edge">
             <h3 className="text-sm font-medium text-ink-secondary mb-4 text-balance">
-              Sessions & Messages
+              {mode === "daily" ? "Daily" : "Weekly"} Sessions
             </h3>
             <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={chartData}>
+              <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} />
                 <XAxis dataKey="date" tick={chart.axisTick} />
-                <YAxis yAxisId="left" tick={chart.axisTick} />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tick={chart.axisTick}
-                />
+                <YAxis tick={chart.axisTick} />
                 <Tooltip
                   contentStyle={chart.tooltipStyle}
                   labelStyle={chart.labelStyle}
                 />
-                <Legend
-                  formatter={(value) => (
-                    <span style={{ color: chart.legendText, fontSize: "12px" }}>{value}</span>
-                  )}
-                />
                 <Bar
-                  yAxisId="left"
                   dataKey="sessionCount"
                   name="Sessions"
                   fill={chart.series[0]}
                   radius={[4, 4, 0, 0]}
                 />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="messageCount"
-                  name="Messages"
-                  stroke={chart.series[1]}
-                  strokeWidth={2}
-                  dot={{ fill: chart.series[1], r: 3 }}
-                />
-              </ComposedChart>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>

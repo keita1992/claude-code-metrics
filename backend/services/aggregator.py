@@ -97,7 +97,7 @@ def _merge_data(
             .select(pl.col("session_id").n_unique())
             .item()
         )
-        live_total_messages = live_df.filter(pl.col("type") == "human").height
+        live_total_messages = live_df.filter(pl.col("type") == "user").height
 
         live_range = (
             live_df
@@ -121,7 +121,7 @@ def _merge_data(
             live_df.group_by("date")
             .agg(
                 pl.col("session_id").n_unique().alias("sessionCount"),
-                pl.len().alias("messageCount"),
+                (pl.col("type") == "user").sum().alias("messageCount"),
                 pl.col("tool_names").list.len().sum().alias("toolCallCount"),
             )
             .sort("date")
