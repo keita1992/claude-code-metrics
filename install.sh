@@ -126,12 +126,14 @@ EOF
 }
 
 PORT="$DEFAULT_PORT"
+PORT_EXPLICIT=false
 
 # 引数解析
 while [ $# -gt 0 ]; do
     case "$1" in
         --port)
             PORT="$2"
+            PORT_EXPLICIT=true
             shift 2
             ;;
         --update)
@@ -163,6 +165,45 @@ if [ ! -d "$INSTALL_DIR" ]; then
     echo "再インストールしてください:" >&2
     echo "  curl -fsSL https://raw.githubusercontent.com/keita1992/claude-code-metrics/main/install.sh | sh" >&2
     exit 1
+fi
+
+# ポートの空きチェック
+is_port_available() {
+    if command -v lsof >/dev/null 2>&1; then
+        ! lsof -i :"$1" >/dev/null 2>&1
+    elif command -v ss >/dev/null 2>&1; then
+        ! ss -tln 2>/dev/null | grep -q ":$1 "
+    elif command -v netstat >/dev/null 2>&1; then
+        ! netstat -tln 2>/dev/null | grep -q ":$1 "
+    else
+        # チェックツールがない場合は空いていると仮定して起動を試みる
+        return 0
+    fi
+}
+
+if [ "$PORT_EXPLICIT" = "true" ]; then
+    # 明示的に指定されたポートが使用中ならエラー
+    if ! is_port_available "$PORT"; then
+        echo "エラー: ポート $PORT は既に使用されています。別のポートを指定してください。" >&2
+        exit 1
+    fi
+else
+    # デフォルトポートの自動フォールバック
+    ORIGINAL_PORT="$PORT"
+    MAX_TRIES=10
+    TRIES=0
+    while ! is_port_available "$PORT"; do
+        TRIES=$((TRIES + 1))
+        if [ "$TRIES" -ge "$MAX_TRIES" ]; then
+            echo "エラー: ポート ${ORIGINAL_PORT}〜$((ORIGINAL_PORT + MAX_TRIES - 1)) はすべて使用中です。" >&2
+            echo "  --port オプションで別のポートを指定してください。" >&2
+            exit 1
+        fi
+        PORT=$((PORT + 1))
+    done
+    if [ "$PORT" != "$ORIGINAL_PORT" ]; then
+        echo "ポート $ORIGINAL_PORT は使用中のため、ポート $PORT を使用します。"
+    fi
 fi
 
 URL="http://127.0.0.1:${PORT}"
