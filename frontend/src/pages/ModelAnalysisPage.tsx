@@ -15,6 +15,7 @@ import {
 import { fetchModels, type ModelsData } from "../api/client";
 import { useTheme } from "../context/ThemeContext";
 import { useLang } from "../context/LanguageContext";
+import { useTimezone } from "../context/TimezoneContext";
 import { cn } from "../lib/utils";
 
 function formatCost(n: number | null): string {
@@ -28,15 +29,16 @@ export default function ModelAnalysisPage() {
   const [loading, setLoading] = useState(true);
   const { chart } = useTheme();
   const { t } = useLang();
+  const { tz } = useTimezone();
 
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    fetchModels()
+    fetchModels(tz)
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [tz]);
 
   useEffect(() => {
     load();

@@ -1,15 +1,21 @@
 """GET /api/projects"""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from services.aggregator import get_aggregated_data
 
 router = APIRouter()
 
+ALLOWED_TIMEZONES = {"Asia/Tokyo", "UTC"}
+
 
 @router.get("/api/projects")
-async def projects():
-    data = get_aggregated_data()
+async def projects(
+    tz: str = Query(default="Asia/Tokyo", description="集計タイムゾーン (Asia/Tokyo または UTC)"),
+):
+    if tz not in ALLOWED_TIMEZONES:
+        tz = "Asia/Tokyo"
+    data = get_aggregated_data(tz=tz)
     projects_data = data.get("projects", {})
 
     result = []

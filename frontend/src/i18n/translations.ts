@@ -30,6 +30,11 @@ export const translations = {
       switchTo: "English",
       label: "言語",
     },
+    timezone: {
+      label: "タイムゾーン",
+      switchToUtc: "UTC に切替",
+      switchToJst: "JST に切替",
+    },
     overview: {
       title: "概要",
       subtitle: "今月の集計",
@@ -194,6 +199,11 @@ export const translations = {
     language: {
       switchTo: "日本語",
       label: "Language",
+    },
+    timezone: {
+      label: "Timezone",
+      switchToUtc: "Switch to UTC",
+      switchToJst: "Switch to JST",
     },
     overview: {
       title: "Overview",

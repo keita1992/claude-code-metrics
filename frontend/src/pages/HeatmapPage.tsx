@@ -3,6 +3,7 @@ import { fetchHeatmap, type HeatmapData, type HeatmapCell } from "../api/client"
 import StatCard from "../components/StatCard";
 import { useTheme } from "../context/ThemeContext";
 import { useLang } from "../context/LanguageContext";
+import { useTimezone } from "../context/TimezoneContext";
 import { cn } from "../lib/utils";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -64,6 +65,7 @@ export default function HeatmapPage() {
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const { theme } = useTheme();
   const { t } = useLang();
+  const { tz } = useTimezone();
 
   const PRESETS: { key: Preset; label: string }[] = [
     { key: "all", label: t.heatmap.presetAll },
@@ -104,7 +106,7 @@ export default function HeatmapPage() {
       setLoading(true);
     }
     setError(null);
-    fetchHeatmap(startDate || undefined, endDate || undefined)
+    fetchHeatmap(startDate || undefined, endDate || undefined, tz)
       .then((d) => {
         setData(d);
         hasData.current = true;
@@ -114,7 +116,7 @@ export default function HeatmapPage() {
         setLoading(false);
         setRefetching(false);
       });
-  }, [startDate, endDate]);
+  }, [startDate, endDate, tz]);
 
   useEffect(() => {
     load();

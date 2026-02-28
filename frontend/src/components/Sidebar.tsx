@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { cn } from "../lib/utils";
 import ThemeToggle from "./ThemeToggle";
 import LanguageToggle from "./LanguageToggle";
+import TimezoneToggle from "./TimezoneToggle";
 import { useLang } from "../context/LanguageContext";
 
 function NavItems() {
@@ -105,6 +106,7 @@ export default function Sidebar() {
       <div className="p-3 border-t border-edge space-y-1">
         <ThemeToggle />
         <LanguageToggle />
+        <TimezoneToggle />
         <p className="text-xs text-ink-muted px-3 py-1">v0.1.0</p>
       </div>
     </aside>

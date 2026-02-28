@@ -1,6 +1,6 @@
 """GET /api/insights"""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from services.aggregator import get_aggregated_data
 from services.insight_engine import (
@@ -14,10 +14,16 @@ from services.insight_engine import (
 
 router = APIRouter()
 
+ALLOWED_TIMEZONES = {"Asia/Tokyo", "UTC"}
+
 
 @router.get("/api/insights")
-async def insights():
-    data = get_aggregated_data()
+async def insights(
+    tz: str = Query(default="Asia/Tokyo", description="集計タイムゾーン (Asia/Tokyo または UTC)"),
+):
+    if tz not in ALLOWED_TIMEZONES:
+        tz = "Asia/Tokyo"
+    data = get_aggregated_data(tz=tz)
     coverage = data.get("coverage", {})
     suggestions = get_downgrade_suggestions(data) + get_cache_read_bloat_suggestions(data)
 

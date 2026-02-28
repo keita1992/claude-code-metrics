@@ -14,6 +14,7 @@ import { fetchOverview, type OverviewData } from "../api/client";
 import StatCard from "../components/StatCard";
 import { useTheme } from "../context/ThemeContext";
 import { useLang } from "../context/LanguageContext";
+import { useTimezone } from "../context/TimezoneContext";
 import { cn } from "../lib/utils";
 
 function formatNumber(n: number): string {
@@ -30,15 +31,16 @@ export default function OverviewPage() {
   const [loading, setLoading] = useState(true);
   const { chart } = useTheme();
   const { t } = useLang();
+  const { tz } = useTimezone();
 
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    fetchOverview()
+    fetchOverview(tz)
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [tz]);
 
   useEffect(() => {
     load();

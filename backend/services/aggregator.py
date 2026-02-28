@@ -10,37 +10,40 @@ from services.cost_calculator import calculate_cost
 from services.jsonl_parser import parse_jsonl_files
 from services.stats_cache import load_stats_cache
 
-_agg_cache: dict | None = None
-_agg_cache_time: float = 0.0
-_deduped_live_df: pl.DataFrame | None = None
+_agg_cache_by_tz: dict[str, dict] = {}
+_agg_cache_time_by_tz: dict[str, float] = {}
+_deduped_live_df_by_tz: dict[str, pl.DataFrame] = {}
 
 
-def get_aggregated_data() -> dict:
-    """JSONLデータを集約して返す (TTLキャッシュ付き)"""
-    global _agg_cache, _agg_cache_time, _deduped_live_df
+def get_aggregated_data(tz: str = "Asia/Tokyo") -> dict:
+    """JSONLデータを集約して返す (TTLキャッシュ付き、TZごとにキャッシュ)"""
+    global _agg_cache_by_tz, _agg_cache_time_by_tz, _deduped_live_df_by_tz
 
     now = time.monotonic()
-    if _agg_cache is not None and (now - _agg_cache_time) < CACHE_TTL_SECONDS:
-        return _agg_cache
+    cached = _agg_cache_by_tz.get(tz)
+    cached_time = _agg_cache_time_by_tz.get(tz, 0.0)
+    if cached is not None and (now - cached_time) < CACHE_TTL_SECONDS:
+        return cached
 
     stats = _load_stats_cache_safe()
     last_computed = stats.get("lastComputedDate", "")
     first_session_date = stats.get("firstSessionDate", "")
 
-    live_df = parse_jsonl_files(since_date=None)
-    _deduped_live_df = _deduplicate_live_assistant_rows(live_df)
+    live_df = parse_jsonl_files(since_date=None, tz_name=tz)
+    _deduped_live_df_by_tz[tz] = _deduplicate_live_assistant_rows(live_df)
     result = _aggregate_live_data(
         live_df=live_df,
         last_computed=last_computed,
         first_session_date=first_session_date,
+        tz=tz,
     )
 
     # ライブデータが無い場合のみstats-cacheへフォールバック
     if live_df.height == 0 and stats:
-        result = _fallback_from_stats(stats=stats, last_computed=last_computed)
+        result = _fallback_from_stats(stats=stats, last_computed=last_computed, tz=tz)
 
-    _agg_cache = result
-    _agg_cache_time = now
+    _agg_cache_by_tz[tz] = result
+    _agg_cache_time_by_tz[tz] = now
     return result
 
 
@@ -83,7 +86,7 @@ def _deduplicate_live_assistant_rows(live_df: pl.DataFrame) -> pl.DataFrame:
     return pl.concat([non_assistant_df, assistant_without_id, assistant_with_id], how="vertical_relaxed")
 
 
-def _aggregate_live_data(live_df: pl.DataFrame, last_computed: str, first_session_date: str) -> dict:
+def _aggregate_live_data(live_df: pl.DataFrame, last_computed: str, first_session_date: str, tz: str = "Asia/Tokyo") -> dict:
     live_df = _deduplicate_live_assistant_rows(live_df)
 
     if live_df.height == 0:
@@ -103,7 +106,7 @@ def _aggregate_live_data(live_df: pl.DataFrame, last_computed: str, first_sessio
             "sessionDateBounds": {},
             "firstSessionDate": first_session_date,
             "coverage": {
-                "timezone": "Asia/Tokyo",
+                "timezone": tz,
                 "statsLastComputedDate": last_computed,
                 "liveDataMode": "full_scan",
                 "liveRangeStartDate": "",
@@ -368,7 +371,7 @@ def _aggregate_live_data(live_df: pl.DataFrame, last_computed: str, first_sessio
         "sessionDateBounds": session_date_bounds,
         "firstSessionDate": first_session_date,
         "coverage": {
-            "timezone": "Asia/Tokyo",
+            "timezone": tz,
             "statsLastComputedDate": last_computed,
             "liveDataMode": "full_scan",
             "liveRangeStartDate": live_range_start,
@@ -493,15 +496,16 @@ def _build_projects(
 
 
 def get_filtered_weekday_hour_tokens(
-    start: str | None = None, end: str | None = None,
+    start: str | None = None, end: str | None = None, tz: str = "Asia/Tokyo",
 ) -> dict[str, dict[str, dict[str, int]]]:
     """日付フィルタ付き曜日×時間帯×モデル別トークン集計"""
-    get_aggregated_data()  # キャッシュ確保
+    get_aggregated_data(tz=tz)  # キャッシュ確保
 
-    if _deduped_live_df is None or _deduped_live_df.height == 0:
+    deduped_live_df = _deduped_live_df_by_tz.get(tz)
+    if deduped_live_df is None or deduped_live_df.height == 0:
         return {}
 
-    assistant_df = _deduped_live_df.filter(
+    assistant_df = deduped_live_df.filter(
         (pl.col("type") == "assistant") & (pl.col("model") != "")
     )
     if start:
@@ -539,7 +543,7 @@ def get_filtered_weekday_hour_tokens(
     return result
 
 
-def _fallback_from_stats(stats: dict, last_computed: str) -> dict:
+def _fallback_from_stats(stats: dict, last_computed: str, tz: str = "Asia/Tokyo") -> dict:
     daily_activity = list(stats.get("dailyActivity") or [])
     daily_model_tokens = list(stats.get("dailyModelTokens") or [])
     model_usage = dict(stats.get("modelUsage") or {})
@@ -574,7 +578,7 @@ def _fallback_from_stats(stats: dict, last_computed: str) -> dict:
         "sessionDateBounds": {},
         "firstSessionDate": stats.get("firstSessionDate", ""),
         "coverage": {
-            "timezone": "Asia/Tokyo",
+            "timezone": tz,
             "statsLastComputedDate": last_computed,
             "liveDataMode": "full_scan",
             "liveRangeStartDate": "",

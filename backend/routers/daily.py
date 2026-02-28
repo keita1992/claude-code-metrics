@@ -251,13 +251,19 @@ def _aggregate_weekly(daily_rows: list[dict], data: dict, start: str, end: str) 
     return result
 
 
+ALLOWED_TIMEZONES = {"Asia/Tokyo", "UTC"}
+
+
 @router.get("/api/daily")
 async def daily(
     start: str = Query(default="", description="開始日 (YYYY-MM-DD)"),
     end: str = Query(default="", description="終了日 (YYYY-MM-DD)"),
     mode: str = Query(default="daily", description="集計モード: daily / weekly"),
+    tz: str = Query(default="Asia/Tokyo", description="集計タイムゾーン (Asia/Tokyo または UTC)"),
 ):
-    data = get_aggregated_data()
+    if tz not in ALLOWED_TIMEZONES:
+        tz = "Asia/Tokyo"
+    data = get_aggregated_data(tz=tz)
     daily_rows = _build_daily_rows(data, start, end)
     timezone = (data.get("coverage") or {}).get("timezone", "Asia/Tokyo")
 

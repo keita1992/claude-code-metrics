@@ -4,15 +4,18 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { ThemeProvider } from "./context/ThemeContext";
 import { LanguageProvider } from "./context/LanguageContext";
+import { TimezoneProvider } from "./context/TimezoneContext";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
       <LanguageProvider>
-        <ThemeProvider>
-          <App />
-        </ThemeProvider>
+        <TimezoneProvider>
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
+        </TimezoneProvider>
       </LanguageProvider>
     </BrowserRouter>
   </StrictMode>,

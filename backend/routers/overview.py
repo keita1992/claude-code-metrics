@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from config import MODEL_DISPLAY_NAMES, PRICE_TABLE
 from routers.daily import _build_daily_rows, _count_unique_sessions_in_range
@@ -74,9 +74,16 @@ def _approximate_model_usage_for_range(data: dict, start: str, end: str) -> dict
     return approx
 
 
+ALLOWED_TIMEZONES = {"Asia/Tokyo", "UTC"}
+
+
 @router.get("/api/overview")
-async def overview():
-    data = get_aggregated_data()
+async def overview(
+    tz: str = Query(default="Asia/Tokyo", description="集計タイムゾーン (Asia/Tokyo または UTC)"),
+):
+    if tz not in ALLOWED_TIMEZONES:
+        tz = "Asia/Tokyo"
+    data = get_aggregated_data(tz=tz)
 
     # --- 今月フィルタ ---
     today = date.today()

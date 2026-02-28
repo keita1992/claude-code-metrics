@@ -14,9 +14,8 @@ import {
 import { fetchDaily, type DailyData } from "../api/client";
 import { useTheme } from "../context/ThemeContext";
 import { useLang } from "../context/LanguageContext";
+import { useTimezone } from "../context/TimezoneContext";
 import { cn } from "../lib/utils";
-
-const DEFAULT_TIMEZONE = "Asia/Tokyo";
 
 function formatDateInTZ(daysAgo: number, tz: string): string {
   const target = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
@@ -29,12 +28,12 @@ function formatDateInTZ(daysAgo: number, tz: string): string {
 }
 
 export default function DailyTrendsPage() {
+  const { tz } = useTimezone();
   const [data, setData] = useState<DailyData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tz, setTz] = useState(DEFAULT_TIMEZONE);
-  const [startDate, setStartDate] = useState(() => formatDateInTZ(30, DEFAULT_TIMEZONE));
-  const [endDate, setEndDate] = useState(() => formatDateInTZ(0, DEFAULT_TIMEZONE));
+  const [startDate, setStartDate] = useState(() => formatDateInTZ(30, tz));
+  const [endDate, setEndDate] = useState(() => formatDateInTZ(0, tz));
   const [mode, setMode] = useState<"daily" | "weekly">("daily");
   const { chart } = useTheme();
   const { t } = useLang();
@@ -48,18 +47,21 @@ export default function DailyTrendsPage() {
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    fetchDaily(startDate, endDate, mode)
-      .then((d) => {
-        setData(d);
-        if (d.timezone) setTz(d.timezone);
-      })
+    fetchDaily(startDate, endDate, mode, tz)
+      .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [startDate, endDate, mode]);
+  }, [startDate, endDate, mode, tz]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  // TZ変更時に日付範囲をリセット
+  useEffect(() => {
+    setStartDate(formatDateInTZ(30, tz));
+    setEndDate(formatDateInTZ(0, tz));
+  }, [tz]);
 
   const applyPreset = (days: number) => {
     setStartDate(formatDateInTZ(days, tz));

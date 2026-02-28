@@ -10,10 +10,16 @@ import polars as pl
 from config import PROJECTS_DIR
 
 JST = ZoneInfo("Asia/Tokyo")
+UTC_TZ = ZoneInfo("UTC")
+
+SUPPORTED_TIMEZONES = {
+    "Asia/Tokyo": JST,
+    "UTC": UTC_TZ,
+}
 
 
-def _to_jst_date_hour(timestamp: str | int | float) -> tuple[str, int]:
-    """タイムスタンプをJSTに変換し、日付と時を返す。"""
+def _to_tz_date_hour(timestamp: str | int | float, tz: ZoneInfo) -> tuple[str, int]:
+    """タイムスタンプを指定TZに変換し、日付と時を返す。"""
     dt: datetime
     if isinstance(timestamp, (int, float)):
         # history.jsonl互換: UNIX epoch milliseconds
@@ -33,8 +39,8 @@ def _to_jst_date_hour(timestamp: str | int | float) -> tuple[str, int]:
     else:
         raise TypeError("unsupported timestamp type")
 
-    dt_jst = dt.astimezone(JST)
-    return dt_jst.date().isoformat(), dt_jst.hour
+    dt_local = dt.astimezone(tz)
+    return dt_local.date().isoformat(), dt_local.hour
 
 
 def _extract_tool_names(content: list | None) -> list[str]:
@@ -48,12 +54,14 @@ def _extract_tool_names(content: list | None) -> list[str]:
     ]
 
 
-def parse_jsonl_files(since_date: date | None = None) -> pl.DataFrame:
+def parse_jsonl_files(since_date: date | None = None, tz_name: str = "Asia/Tokyo") -> pl.DataFrame:
     """
     全プロジェクトのJSONLファイルをパースしてDataFrameに変換。
 
-    since_dateが指定された場合、そのJST日付以降のレコードのみを返す。
+    since_dateが指定された場合、その日付以降のレコードのみを返す。
+    tz_nameで集計タイムゾーンを指定する（"Asia/Tokyo" または "UTC"）。
     """
+    tz = SUPPORTED_TIMEZONES.get(tz_name, JST)
     records: list[dict] = []
     projects_dir = PROJECTS_DIR
 
@@ -68,7 +76,7 @@ def parse_jsonl_files(since_date: date | None = None) -> pl.DataFrame:
         project_name = _resolve_project_name(dir_name)
 
         for jsonl_file in project_dir.glob("*.jsonl"):
-            _parse_single_file(jsonl_file, since_date, dir_name, project_name, records)
+            _parse_single_file(jsonl_file, since_date, dir_name, project_name, records, tz)
 
     if not records:
         return _empty_dataframe()
@@ -82,6 +90,7 @@ def _parse_single_file(
     dir_name: str,
     project_name: str,
     records: list[dict],
+    tz: ZoneInfo = JST,
 ) -> None:
     """単一のJSONLファイルを行単位でパース"""
     since_iso = since_date.isoformat() if since_date is not None else ""
@@ -101,11 +110,11 @@ def _parse_single_file(
                 continue
 
             try:
-                row_date, row_hour = _to_jst_date_hour(ts)
+                row_date, row_hour = _to_tz_date_hour(ts, tz)
             except (TypeError, ValueError):
                 continue
 
-            # JST日付でフィルタ
+            # 指定TZ日付でフィルタ
             if since_iso and row_date < since_iso:
                 continue
 

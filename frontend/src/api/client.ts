@@ -127,41 +127,41 @@ async function fetchJSON<T>(url: string): Promise<T> {
   return res.json();
 }
 
-export function fetchOverview(): Promise<OverviewData> {
+export function fetchOverview(tz = "Asia/Tokyo"): Promise<OverviewData> {
   if (DEMO) return Promise.resolve(mock.MOCK_OVERVIEW);
-  return fetchJSON<OverviewData>("/api/overview");
+  return fetchJSON<OverviewData>(`/api/overview?tz=${encodeURIComponent(tz)}`);
 }
 
-export function fetchDaily(_start?: string, _end?: string, _mode: "daily" | "weekly" = "daily"): Promise<DailyData> {
+export function fetchDaily(_start?: string, _end?: string, _mode: "daily" | "weekly" = "daily", tz = "Asia/Tokyo"): Promise<DailyData> {
   if (DEMO) return Promise.resolve(mock.MOCK_DAILY);
   const params = new URLSearchParams();
   if (_start) params.set("start", _start);
   if (_end) params.set("end", _end);
   if (_mode === "weekly") params.set("mode", "weekly");
-  const qs = params.toString();
-  return fetchJSON<DailyData>(`/api/daily${qs ? `?${qs}` : ""}`);
+  params.set("tz", tz);
+  return fetchJSON<DailyData>(`/api/daily?${params.toString()}`);
 }
 
-export function fetchModels(): Promise<ModelsData> {
+export function fetchModels(tz = "Asia/Tokyo"): Promise<ModelsData> {
   if (DEMO) return Promise.resolve(mock.MOCK_MODELS);
-  return fetchJSON<ModelsData>("/api/models");
+  return fetchJSON<ModelsData>(`/api/models?tz=${encodeURIComponent(tz)}`);
 }
 
-export function fetchProjects(): Promise<ProjectsData> {
+export function fetchProjects(tz = "Asia/Tokyo"): Promise<ProjectsData> {
   if (DEMO) return Promise.resolve(mock.MOCK_PROJECTS);
-  return fetchJSON<ProjectsData>("/api/projects");
+  return fetchJSON<ProjectsData>(`/api/projects?tz=${encodeURIComponent(tz)}`);
 }
 
-export function fetchInsights(): Promise<InsightsData> {
+export function fetchInsights(tz = "Asia/Tokyo"): Promise<InsightsData> {
   if (DEMO) return Promise.resolve(mock.MOCK_INSIGHTS);
-  return fetchJSON<InsightsData>("/api/insights");
+  return fetchJSON<InsightsData>(`/api/insights?tz=${encodeURIComponent(tz)}`);
 }
 
-export function fetchHeatmap(_start?: string, _end?: string): Promise<HeatmapData> {
+export function fetchHeatmap(_start?: string, _end?: string, tz = "Asia/Tokyo"): Promise<HeatmapData> {
   if (DEMO) return Promise.resolve(mock.MOCK_HEATMAP);
   const params = new URLSearchParams();
   if (_start) params.set("start", _start);
   if (_end) params.set("end", _end);
-  const qs = params.toString();
-  return fetchJSON<HeatmapData>(`/api/heatmap${qs ? `?${qs}` : ""}`);
+  params.set("tz", tz);
+  return fetchJSON<HeatmapData>(`/api/heatmap?${params.toString()}`);
 }

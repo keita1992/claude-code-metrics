@@ -15,6 +15,7 @@ import {
 import { fetchProjects, type ProjectsData } from "../api/client";
 import { useTheme } from "../context/ThemeContext";
 import { useLang } from "../context/LanguageContext";
+import { useTimezone } from "../context/TimezoneContext";
 import { cn } from "../lib/utils";
 
 function formatCost(n: number): string {
@@ -28,11 +29,12 @@ export default function ProjectsPage() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const { chart } = useTheme();
   const { t } = useLang();
+  const { tz } = useTimezone();
 
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    fetchProjects()
+    fetchProjects(tz)
       .then((d) => {
         setData(d);
         if (d.projects.length > 0) {
@@ -41,7 +43,7 @@ export default function ProjectsPage() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [tz]);
 
   useEffect(() => {
     load();

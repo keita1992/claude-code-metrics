@@ -1,6 +1,6 @@
 """GET /api/models"""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from config import MODEL_DISPLAY_NAMES, PRICE_TABLE
 from services.aggregator import get_aggregated_data
@@ -9,9 +9,16 @@ from services.cost_calculator import calculate_cache_savings, calculate_cost, ca
 router = APIRouter()
 
 
+ALLOWED_TIMEZONES = {"Asia/Tokyo", "UTC"}
+
+
 @router.get("/api/models")
-async def models():
-    data = get_aggregated_data()
+async def models(
+    tz: str = Query(default="Asia/Tokyo", description="集計タイムゾーン (Asia/Tokyo または UTC)"),
+):
+    if tz not in ALLOWED_TIMEZONES:
+        tz = "Asia/Tokyo"
+    data = get_aggregated_data(tz=tz)
     model_usage = data.get("modelUsage", {})
 
     models_list = []

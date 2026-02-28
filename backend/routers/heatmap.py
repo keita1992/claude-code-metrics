@@ -7,19 +7,24 @@ from services.cost_calculator import calculate_cost
 
 router = APIRouter()
 
+ALLOWED_TIMEZONES = {"Asia/Tokyo", "UTC"}
+
 
 @router.get("/api/heatmap")
 async def heatmap(
     start: str | None = Query(None, description="開始日 (YYYY-MM-DD)"),
     end: str | None = Query(None, description="終了日 (YYYY-MM-DD)"),
+    tz: str = Query("Asia/Tokyo", description="集計タイムゾーン (Asia/Tokyo または UTC)"),
 ):
-    data = get_aggregated_data()
+    if tz not in ALLOWED_TIMEZONES:
+        tz = "Asia/Tokyo"
+    data = get_aggregated_data(tz=tz)
     coverage = data.get("coverage", {})
 
     if start is None and end is None:
         whm = data.get("weekdayHourModelTokens", {})
     else:
-        whm = get_filtered_weekday_hour_tokens(start=start, end=end)
+        whm = get_filtered_weekday_hour_tokens(start=start, end=end, tz=tz)
 
     cells: list[dict] = []
     for key, models in whm.items():
